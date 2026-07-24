@@ -25,6 +25,16 @@ export function parseQuantityToBytes(quantity: string): number | null {
   return value * multiplier;
 }
 
+// Formats raw bytes as a human readable binary quantity, e.g. 1572864 -> "1.5 MiB".
+export function formatBytes(bytes: number): string {
+  for (const unit of ['Ei', 'Pi', 'Ti', 'Gi', 'Mi', 'Ki']) {
+    if (bytes >= MULTIPLIERS[unit]) {
+      return `${(bytes / MULTIPLIERS[unit]).toFixed(1).replace(/\.0$/, '')} ${unit}B`;
+    }
+  }
+  return `${bytes} B`;
+}
+
 // Splits "100Gi" into {value: 100, unit: 'Gi'} for form prefill; null when the
 // quantity has no suffix or one outside BINARY_UNITS.
 export function splitQuantity(quantity: string): { value: number; unit: BinaryUnit } | null {

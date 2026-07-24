@@ -86,6 +86,15 @@ mat-table {
     }
   }
 
+  .mat-column-name {
+    &--pra-child::before {
+      content: '\2514'; // tree connector, the row sits under its parent
+      padding-left: 16px;
+      margin-right: 8px;
+      color: var(--mat-sys-outline);
+    }
+  }
+
   .mat-mdc-cell {
     .text-truncate {
       display: -webkit-box;

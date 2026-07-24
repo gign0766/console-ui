@@ -11,6 +11,7 @@ import { BaaS } from './storage/baas/baas.model';
 import { BucketView } from './storage/bucket/bucket.model';
 import { Disk, MountStatus } from './storage/disk/disk.model';
 import { PVC } from './storage/disk/pvc.model';
+import { DiskReplication } from './storage/disk/replication.model';
 import { Snapshot, SnapshotSchedule } from './storage/snapshot/snapshot.model';
 import { SSH } from './uncategorized/ssh/ssh.model';
 
@@ -72,6 +73,7 @@ export interface ProductDisk extends Product {
   disk?: Disk;
   pvc?: PVC;
   mountStatus?: MountStatus;
+  replication?: DiskReplication;
 }
 
 export interface ProductSnapshot extends Product {
