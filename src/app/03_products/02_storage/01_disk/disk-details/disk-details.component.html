@@ -179,23 +179,34 @@
               {{ disk.gitops === 'true' ? 'Yes' : 'No' }}
             </span>
 
-            <span class="product-details__card-line-left"><strong>Replication: </strong></span>
-            <div class="product-details__card-line-right">
-              <mat-chip-set aria-label="disk status">
-                @if (replication()?.state; as replicationState) {
-                  <mat-chip
-                    [class]="'status-chip--' + (replicationState === 'Primary' ? 'ready' : 'pending')"
-                    disabled="true">
-                    {{ replicationState }}
-                  </mat-chip>
-                } @else {
+            @if (replication()?.state; as replicationState) {
+              <button
+                class="as-div replication-row"
+                aria-label="Show replication details"
+                (click)="openReplicationDialog()">
+                <span class="product-details__card-line-left"><strong>Replication: </strong></span>
+                <div class="product-details__card-line-right">
+                  <mat-chip-set aria-label="disk status">
+                    <mat-chip
+                      [class]="'status-chip--' + (replicationState === 'Primary' ? 'ready' : 'pending')"
+                      disabled="true">
+                      {{ replicationState }}
+                    </mat-chip>
+                  </mat-chip-set>
+                  <mat-icon class="replication-row__chevron">chevron_right</mat-icon>
+                </div>
+              </button>
+            } @else {
+              <span class="product-details__card-line-left"><strong>Replication: </strong></span>
+              <div class="product-details__card-line-right">
+                <mat-chip-set aria-label="disk status">
                   @let matChipStatus = diskStatus().isReplicated ? 'ready' : 'deactivated';
                   <mat-chip [class]="'status-chip--' + matChipStatus" disabled="true">
                     {{ diskStatus().isReplicated ? 'Ready' : 'None' }}
                   </mat-chip>
-                }
-              </mat-chip-set>
-            </div>
+                </mat-chip-set>
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -243,52 +254,6 @@
             <spx-span-copy class="product-details__card-line" key="Origine" [value]="disk.pvc.spec.dataSource.name" />
           }
         </div>
-
-        @if (replication(); as replication) {
-          <div class="product-details__card sg-r1 sg-c2">
-            <h3 class="mt-0">Replication</h3>
-
-            @if (replication.class; as replicationClass) {
-              <span class="product-details__card-line">
-                <strong>Class: </strong> {{ replicationClass.name }}
-              </span>
-              @if (replicationClass.schedulingInterval) {
-                <span class="product-details__card-line">
-                  <strong>Scheduling interval: </strong> {{ replicationClass.schedulingInterval }}
-                </span>
-              }
-              @if (replicationClass.schedulingStartTime) {
-                <span class="product-details__card-line">
-                  <strong>Scheduling start time: </strong> {{ replicationClass.schedulingStartTime }}
-                </span>
-              }
-              @if (replicationClass.mirroringMode) {
-                <span class="product-details__card-line">
-                  <strong>Mirroring mode: </strong> {{ replicationClass.mirroringMode }}
-                </span>
-              }
-            }
-
-            @if (replication.lastSyncTime) {
-              <span class="product-details__card-line">
-                <strong>Last sync: </strong> {{ replication.lastSyncTime | date: 'medium' }}
-              </span>
-            }
-            @if (replication.lastSyncDuration) {
-              <span class="product-details__card-line">
-                <strong>Last sync duration: </strong> {{ replication.lastSyncDuration }}
-              </span>
-            }
-            @if (replication.lastSyncBytes) {
-              <span class="product-details__card-line">
-                <strong>Last sync size: </strong> {{ formatBytes(replication.lastSyncBytes) }}
-              </span>
-            }
-            @if (replication.message) {
-              <span class="product-details__card-line"> <strong>Message: </strong> {{ replication.message }} </span>
-            }
-          </div>
-        }
 
         @if (disk?.mountStatus?.isMounted) {
           <div class="product-details__card sg-r1 sg-c2">

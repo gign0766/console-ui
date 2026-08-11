@@ -1,5 +1,5 @@
 import { Clipboard } from '@angular/cdk/clipboard';
-import { DatePipe, KeyValuePipe } from '@angular/common';
+import { KeyValuePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,11 +12,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DiskActions } from '../disk-actions.utils';
+import { DiskReplicationDialog } from '../dialogs/disk-replication-dialog.component';
 import { DiskService } from '@products/00_shared/services/disk.service';
 import { InstanceService } from '@products/00_shared/services/instance.service';
 import { SnapshotService } from '@products/00_shared/services/snapshot.service';
 import { isClusterResource } from '@products/00_shared/utils/cluster-utils';
-import { formatBytes } from '@products/00_shared/utils/quantity';
 import { getProductLabelInfo } from '@products/00_shared/utils/product-label-utils';
 import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
@@ -42,7 +42,6 @@ interface DiskStatus {
     MatButtonModule,
     MatIconModule,
     ContentHeaderComponent,
-    DatePipe,
     KeyValuePipe,
     MatMenuModule,
     MatDividerModule,
@@ -125,7 +124,12 @@ export class DiskDetailsComponent {
 
   replication = computed(() => (this.diskProduct.hasValue() ? this.diskProduct.value().replication : undefined));
 
-  protected readonly formatBytes = formatBytes;
+  openReplicationDialog() {
+    const replication = this.replication();
+    if (replication) {
+      this.dialog.open(DiskReplicationDialog, { data: replication });
+    }
+  }
 
   isClusterInstance = computed(() => {
     if (this.instanceProduct.hasValue()) {
