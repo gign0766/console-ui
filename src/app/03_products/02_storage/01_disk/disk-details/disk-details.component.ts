@@ -10,9 +10,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DiskActions } from '../disk-actions.utils';
-import { DiskReplicationDialog } from '../dialogs/disk-replication-dialog.component';
+import { DiskDetailsReplicationComponent } from './disk-details-replication/disk-details-replication.component';
+import { TabsBase } from '@products/00_shared/components/tabs-base/tab-base.component';
 import { DiskService } from '@products/00_shared/services/disk.service';
 import { InstanceService } from '@products/00_shared/services/instance.service';
 import { SnapshotService } from '@products/00_shared/services/snapshot.service';
@@ -46,15 +48,17 @@ interface DiskStatus {
     MatMenuModule,
     MatDividerModule,
     MatChipsModule,
+    MatTabsModule,
     RouterLink,
     BannerComponent,
     SpanCopyComponent,
     GridDirective,
+    DiskDetailsReplicationComponent,
   ],
   templateUrl: './disk-details.component.html',
   styleUrl: './disk-details.component.scss',
 })
-export class DiskDetailsComponent {
+export class DiskDetailsComponent extends TabsBase {
   protected readonly DataVolumeTooSmall = 'DataVolume too small to contain image';
 
   protected stateSvc = inject(StateService);
@@ -63,7 +67,6 @@ export class DiskDetailsComponent {
   protected snapshotSvc = inject(SnapshotService);
   protected instanceSvc = inject(InstanceService);
   protected clipboard = inject(Clipboard);
-  protected router = inject(Router);
 
   private readonly dialog = inject(MatDialog);
   private readonly snackbar = inject(MatSnackBar);
@@ -124,11 +127,8 @@ export class DiskDetailsComponent {
 
   replication = computed(() => (this.diskProduct.hasValue() ? this.diskProduct.value().replication : undefined));
 
-  openReplicationDialog() {
-    const replication = this.replication();
-    if (replication) {
-      this.dialog.open(DiskReplicationDialog, { data: replication });
-    }
+  goToReplicationTab() {
+    this.updateFragment(1); // Replication tab index — pill and tab share the same visibility condition
   }
 
   isClusterInstance = computed(() => {
@@ -150,6 +150,7 @@ export class DiskDetailsComponent {
   private needReload = signal(0);
 
   constructor() {
+    super();
     const route = inject(ActivatedRoute);
 
     this.routeParams = toSignal(route.params);

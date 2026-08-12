@@ -1,0 +1,86 @@
+<div class="product-details">
+  <h2>Replication</h2>
+
+  <div class="replication-tab product-details__card">
+    @if (replication().state || replication().lastSyncTime) {
+      <div class="replication-tab__status d-flex align-items-center gap-3">
+        @if (replication().state; as replicationState) {
+          <mat-chip-set aria-label="replication state">
+            <mat-chip
+              [class]="'status-chip--' + (replicationState === 'Primary' ? 'ready' : 'pending')"
+              disabled="true">
+              {{ replicationState }}
+            </mat-chip>
+          </mat-chip-set>
+        }
+        @if (replication().lastSyncTime; as lastSyncTime) {
+          <span [matTooltip]="(lastSyncTime | date: 'medium') ?? ''">
+            Last synced {{ formatRelativeTime(lastSyncTime) }}
+          </span>
+        }
+      </div>
+    }
+
+    <h4 class="label d-flex align-items-center gap-2">
+      <div class="mat-icon--with-bg"><mat-icon>sync</mat-icon></div>
+      Synchronization
+    </h4>
+    <div class="replication-tab__grid">
+      <div class="replication-tab__item">
+        <div class="replication-tab__item-label">Last sync</div>
+        <div class="replication-tab__item-value" [matTooltip]="(replication().lastSyncTime | date: 'medium') ?? ''">
+          {{ replication().lastSyncTime ? formatRelativeTime(replication().lastSyncTime!) : '-' }}
+        </div>
+      </div>
+      <div class="replication-tab__item">
+        <div class="replication-tab__item-label">Duration</div>
+        <div class="replication-tab__item-value">{{ replication().lastSyncDuration || '-' }}</div>
+      </div>
+      <div class="replication-tab__item">
+        <div class="replication-tab__item-label">Size</div>
+        <div class="replication-tab__item-value">
+          {{ replication().lastSyncBytes ? formatBytes(replication().lastSyncBytes!) : '-' }}
+        </div>
+      </div>
+      <div class="replication-tab__item">
+        <div class="replication-tab__item-label">Last completion</div>
+        <div class="replication-tab__item-value">{{ (replication().lastCompletionTime | date: 'medium') || '-' }}</div>
+      </div>
+    </div>
+
+    @if (replication().class; as replicationClass) {
+      <div class="replication-tab__hr"></div>
+
+      <h4 class="label d-flex align-items-center gap-2">
+        <div class="mat-icon--with-bg"><mat-icon>tune</mat-icon></div>
+        Policy
+      </h4>
+      <div class="replication-tab__grid">
+        <div class="replication-tab__item">
+          <div class="replication-tab__item-label">Class</div>
+          <div class="replication-tab__item-value">{{ replicationClass.name || '-' }}</div>
+        </div>
+        <div class="replication-tab__item">
+          <div class="replication-tab__item-label">Mirroring mode</div>
+          <div class="replication-tab__item-value">{{ replicationClass.mirroringMode || '-' }}</div>
+        </div>
+        <div class="replication-tab__item">
+          <div class="replication-tab__item-label">Scheduling interval</div>
+          <div class="replication-tab__item-value">{{ replicationClass.schedulingInterval || '-' }}</div>
+        </div>
+        <div class="replication-tab__item">
+          <div class="replication-tab__item-label">Scheduling start time</div>
+          <div class="replication-tab__item-value">{{ replicationClass.schedulingStartTime || '-' }}</div>
+        </div>
+      </div>
+    }
+
+    @if (message(); as informativeMessage) {
+      <div class="replication-tab__hr"></div>
+      <div class="replication-tab__message d-flex align-items-center gap-2">
+        <mat-icon>info</mat-icon>
+        <span>{{ informativeMessage }}</span>
+      </div>
+    }
+  </div>
+</div>
