@@ -35,9 +35,20 @@
     overflow-wrap: anywhere;
   }
 
+  &__item-value-hint {
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
   &__hr {
     border-top: 1px solid var(--stroke-default);
     margin-block: 1rem;
+  }
+
+  &__footnote {
+    font: var(--mat-sys-label-small);
+    color: var(--mat-sys-on-surface-variant);
+    margin-top: 1rem;
   }
 
   &__message {

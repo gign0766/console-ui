@@ -14,7 +14,11 @@
           </mat-chip-set>
         }
         @if (replication().lastSyncTime; as lastSyncTime) {
-          <span [matTooltip]="(lastSyncTime | date: 'medium') ?? ''">
+          <span
+            matTooltipClass="tooltip--multiline"
+            [matTooltip]="
+              (lastSyncTime | date: 'medium') + '\n' + (lastSyncTime | date: 'yyyy-MM-dd HH:mm:ss' : 'UTC') + ' UTC'
+            ">
             Last synced {{ formatRelativeTime(lastSyncTime) }}
           </span>
         }
@@ -30,7 +34,11 @@
         <div class="replication-tab__item-label">Last sync</div>
         <div class="replication-tab__item-value">
           @if (replication().lastSyncTime; as lastSyncTime) {
-            <span [matTooltip]="(lastSyncTime | date: 'medium') ?? ''">
+            <span
+              matTooltipClass="tooltip--multiline"
+              [matTooltip]="
+                (lastSyncTime | date: 'medium') + '\n' + (lastSyncTime | date: 'yyyy-MM-dd HH:mm:ss' : 'UTC') + ' UTC'
+              ">
               {{ formatRelativeTime(lastSyncTime) }}
             </span>
           } @else {
@@ -50,7 +58,15 @@
       </div>
       <div class="replication-tab__item">
         <div class="replication-tab__item-label">Last completion</div>
-        <div class="replication-tab__item-value">{{ (replication().lastCompletionTime | date: 'medium') || '-' }}</div>
+        <div class="replication-tab__item-value">
+          @if (replication().lastCompletionTime; as lastCompletionTime) {
+            <span [matTooltip]="(lastCompletionTime | date: 'yyyy-MM-dd HH:mm:ss' : 'UTC') + ' UTC'">
+              {{ lastCompletionTime | date: 'medium' }}
+            </span>
+          } @else {
+            -
+          }
+        </div>
       </div>
     </div>
 
@@ -76,7 +92,16 @@
         </div>
         <div class="replication-tab__item">
           <div class="replication-tab__item-label">Scheduling start time</div>
-          <div class="replication-tab__item-value">{{ replicationClass.schedulingStartTime || '-' }}</div>
+          <div class="replication-tab__item-value">
+            @if (schedulingStartTime(); as startTime) {
+              <span matTooltip="The cluster schedules replication in UTC — shown here in your local time">
+                {{ startTime.local }}
+                <span class="replication-tab__item-value-hint">({{ startTime.utc }} UTC)</span>
+              </span>
+            } @else {
+              {{ replicationClass.schedulingStartTime || '-' }}
+            }
+          </div>
         </div>
       </div>
     }
@@ -86,6 +111,12 @@
       <div class="replication-tab__message d-flex align-items-center gap-2">
         <mat-icon>info</mat-icon>
         <span>{{ informativeMessage }}</span>
+      </div>
+    }
+
+    @if (hasTimes()) {
+      <div class="replication-tab__footnote">
+        * Times are shown in your local timezone ({{ timezoneLabel }})
       </div>
     }
   </div>

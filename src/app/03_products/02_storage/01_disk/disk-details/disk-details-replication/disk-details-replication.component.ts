@@ -5,7 +5,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DiskReplication } from '@products/00_shared/models/storage/disk/replication.model';
 import { formatBytes } from '@products/00_shared/utils/quantity';
-import { formatRelativeTime } from '@products/00_shared/utils/time';
+import {
+  formatRelativeTime,
+  formatUtcTimeOfDayToLocal,
+  localTimezoneLabel,
+} from '@products/00_shared/utils/time';
 
 @Component({
   selector: 'spx-disk-details-replication',
@@ -18,6 +22,21 @@ export class DiskDetailsReplicationComponent {
 
   protected readonly formatBytes = formatBytes;
   protected readonly formatRelativeTime = formatRelativeTime;
+  protected readonly timezoneLabel = localTimezoneLabel();
+
+  hasTimes = computed(() => {
+    const replication = this.replication();
+    return !!(
+      replication.lastSyncTime ||
+      replication.lastCompletionTime ||
+      replication.class?.schedulingStartTime
+    );
+  });
+
+  schedulingStartTime = computed(() => {
+    const raw = this.replication().class?.schedulingStartTime;
+    return raw ? formatUtcTimeOfDayToLocal(raw) : undefined;
+  });
 
   // The cluster message often just restates the state ("volume is marked primary"),
   // which the state chip already shows — only surface messages carrying extra info.
