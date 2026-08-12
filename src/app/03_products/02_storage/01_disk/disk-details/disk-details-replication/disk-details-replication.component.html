@@ -28,8 +28,14 @@
     <div class="replication-tab__grid">
       <div class="replication-tab__item">
         <div class="replication-tab__item-label">Last sync</div>
-        <div class="replication-tab__item-value" [matTooltip]="(replication().lastSyncTime | date: 'medium') ?? ''">
-          {{ replication().lastSyncTime ? formatRelativeTime(replication().lastSyncTime!) : '-' }}
+        <div class="replication-tab__item-value">
+          @if (replication().lastSyncTime; as lastSyncTime) {
+            <span [matTooltip]="(lastSyncTime | date: 'medium') ?? ''">
+              {{ formatRelativeTime(lastSyncTime) }}
+            </span>
+          } @else {
+            -
+          }
         </div>
       </div>
       <div class="replication-tab__item">
