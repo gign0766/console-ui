@@ -8,12 +8,19 @@ import { BucketService } from '@products/00_shared/services/bucket.service';
 import { ConfirmDialog } from '@shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { StateService } from '@shared/services/state.service';
 
+export const BUCKET_PHASE_BOUND = 'Bound';
+
+// An OBC only has an endpoint and credentials once its phase is Bound.
+export function isBucketBound(phase?: string): boolean {
+  return phase === BUCKET_PHASE_BOUND;
+}
+
 // Maps an ObjectBucketClaim phase to a status-chip class suffix and a user-facing
 // label. The raw phase is kept in `title` so the k8s wording stays discoverable.
 // Note: Failed maps to the red "error" chip on purpose (the "failed" scss class renders amber).
 export function bucketPhaseChip(phase?: string): { cls: string; label: string; title: string } {
   switch (phase) {
-    case 'Bound':
+    case BUCKET_PHASE_BOUND:
       return { cls: 'status-chip--ready', label: 'Ready', title: phase };
     case 'Pending':
       return { cls: 'status-chip--pending', label: 'Provisioning', title: phase };
