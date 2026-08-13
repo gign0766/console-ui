@@ -1,6 +1,5 @@
 export interface DiskReplicationClass {
   name: string;
-  provisioner?: string;
   schedulingInterval?: string;
   schedulingStartTime?: string;
   mirroringMode?: string;
