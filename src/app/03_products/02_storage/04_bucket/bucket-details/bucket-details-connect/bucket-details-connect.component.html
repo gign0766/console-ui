@@ -21,11 +21,16 @@
       <div class="product-details__card sg-c-all">
         @if (!credentials()) {
         <span class="product-details__card-line">The credentials give full admin access to this bucket.</span>
-        <span class="product-details__card-line d-flex gap-3">
+        <span
+          class="product-details__card-line d-flex gap-3 align-self-start"
+          [matTooltip]="
+            !isBound() ? 'Credentials are available once the bucket is Ready. Use the refresh button above to check the status.' : ''
+          "
+          matTooltipPosition="above">
           <button
             matButton="filled"
             aria-label="Reveal credentials"
-            [disabled]="credentialsLoading()"
+            [disabled]="credentialsLoading() || !isBound()"
             (click)="revealCredentials()">
             @if (credentialsLoading()) {
               <mat-spinner diameter="20"></mat-spinner>
@@ -34,7 +39,11 @@
             }
             Reveal credentials
           </button>
-          <button matButton [matMenuTriggerFor]="downloadMenu" [disabled]="credentialsLoading()" aria-label="Download config">
+          <button
+            matButton
+            [matMenuTriggerFor]="downloadMenu"
+            [disabled]="credentialsLoading() || !isBound()"
+            aria-label="Download config">
             <mat-icon>download</mat-icon>
             Download config
           </button>
@@ -74,23 +83,30 @@
   <h2>Quick start</h2>
   <div spxGrid>
     <div class="product-details__card sg-c-all">
-      <div class="product-details__card-line">
-        <mat-button-toggle-group
-          [value]="cli()"
-          (change)="cli.set($event.value)"
-          aria-label="CLI flavour"
-          hideSingleSelectionIndicator>
-          <mat-button-toggle value="aws">AWS CLI</mat-button-toggle>
-          <mat-button-toggle value="s3cmd">s3cmd</mat-button-toggle>
-        </mat-button-toggle-group>
-      </div>
+      @if (isBound()) {
+        <div class="product-details__card-line">
+          <mat-button-toggle-group
+            [value]="cli()"
+            (change)="cli.set($event.value)"
+            aria-label="CLI flavour"
+            hideSingleSelectionIndicator>
+            <mat-button-toggle value="aws">AWS CLI</mat-button-toggle>
+            <mat-button-toggle value="s3cmd">s3cmd</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
 
-      <span class="product-details__card-line">
-        Download the config above first, then run:
-      </span>
+        <span class="product-details__card-line">
+          Download the config above first, then run:
+        </span>
 
-      @for (snippet of snippets(); track snippet.label) {
-        <spx-code-block [label]="snippet.label" [code]="snippet.code" />
+        @for (snippet of snippets(); track snippet.label) {
+          <spx-code-block [label]="snippet.label" [code]="snippet.code" />
+        }
+      } @else {
+        <span class="product-details__card-line">
+          This bucket is still provisioning. Connection commands will appear here once ready. Use the refresh button
+          above to check the status.
+        </span>
       }
     </div>
   </div>

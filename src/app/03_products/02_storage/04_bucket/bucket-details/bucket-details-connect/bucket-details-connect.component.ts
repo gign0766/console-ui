@@ -6,8 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer } from '@angular/platform-browser';
-import { BucketActions } from '../../bucket-actions.utils';
+import { BucketActions, isBucketBound } from '../../bucket-actions.utils';
 import { ProductBucket } from '@products/00_shared/models/product.model';
 import { BucketCredentials } from '@products/00_shared/models/storage/bucket/bucket.model';
 import { BucketService } from '@products/00_shared/services/bucket.service';
@@ -29,6 +30,7 @@ type CliFlavour = 'aws' | 's3cmd';
     MatIconModule,
     MatMenuModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     CodeBlockComponent,
     SpanCopyComponent,
     GridDirective,
@@ -49,6 +51,8 @@ export class BucketDetailsConnectComponent {
   canProjectBucketCredentials = computed(() =>
     this.permissionSvc.permissions().includes(PermissionsEnum.ProjectBucketCredentials)
   );
+
+  isBound = computed(() => isBucketBound(this.bucket().bucket?.phase));
 
   credentials = signal<BucketCredentials | undefined>(undefined);
   credentialsLoading = signal(false);
@@ -86,6 +90,9 @@ export class BucketDetailsConnectComponent {
   // Fetches the credentials on demand without revealing them on screen (does not
   // set the `credentials` signal). Returns the cached ones when already revealed.
   private async loadCredentials(): Promise<BucketCredentials | undefined> {
+    if (!this.isBound()) {
+      return undefined;
+    }
     const existing = this.credentials();
     if (existing) {
       return existing;
