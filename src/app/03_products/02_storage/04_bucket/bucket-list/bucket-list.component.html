@@ -30,7 +30,13 @@
       </div>
     }
 
-    <spx-product-table-wrapper [dataSource]="dataSource()" [columns]="displayedColumns" [sortDataFunc]="bucketSortFunc">
+    <spx-product-table-wrapper
+      [dataSource]="dataSource()"
+      [columns]="displayedColumns"
+      [sortDataFunc]="bucketSortFunc"
+      emptyMessage="No buckets yet."
+      emptyCreateLabel="Create a bucket"
+      [canCreate]="canProjectBucketWrite()">
       <ng-container matColumnDef="storageClass">
         <mat-header-cell *matHeaderCellDef mat-sort-header> Storage class </mat-header-cell>
         <mat-cell *matCellDef="let el">
@@ -86,16 +92,6 @@
           </mat-menu>
         </mat-cell>
       </ng-container>
-
-      <tr class="d-flex mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center gap-2">
-          <span>No buckets yet.</span>
-          @if (canProjectBucketWrite()) {
-            <a class="color-primary" [routerLink]="['create']">Create a bucket</a>
-          }
-        </td>
-        <td class="mat-mdc-cell mat-column-actions mat-column-actions--empty mat-column-actions--double-btn"></td>
-      </tr>
 
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>

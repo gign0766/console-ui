@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { SshListComponent } from './ssh-list.component';
 
@@ -8,9 +9,9 @@ describe('SshListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SshListComponent]
-    })
-    .compileComponents();
+      imports: [SshListComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(SshListComponent);
     component = fixture.componentInstance;

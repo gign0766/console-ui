@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { FirewallListComponent } from './firewall-list.component';
 
@@ -8,9 +9,9 @@ describe('FirewallListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FirewallListComponent]
-    })
-    .compileComponents();
+      imports: [FirewallListComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(FirewallListComponent);
     component = fixture.componentInstance;

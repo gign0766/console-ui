@@ -21,6 +21,7 @@ import {
   MatTableDataSource,
   MatTableModule,
 } from '@angular/material/table';
+import { RouterLink } from '@angular/router';
 import { Product } from '@products/00_shared/models/product.model';
 import { AZService } from '@products/00_shared/services/az.service';
 import { StateService } from '@shared/services/state.service';
@@ -48,7 +49,7 @@ export function defaultSortFunc<T extends ProductItem>(sort: Sort, a: T, b: T) {
 
 @Component({
   selector: 'spx-product-table-wrapper',
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatSortModule],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, MatSortModule, RouterLink],
   templateUrl: './product-table-wrapper.component.html',
   styleUrl: './product-table-wrapper.component.scss',
 })
@@ -56,7 +57,12 @@ export class ProductTableWrapperComponent<T extends ProductItem> implements Afte
   @ContentChildren(MatHeaderRowDef) headerRowDefs!: QueryList<MatHeaderRowDef>;
   @ContentChildren(MatRowDef) rowDefs!: QueryList<MatRowDef<T>>;
   @ContentChildren(MatColumnDef) columnDefs!: QueryList<MatColumnDef>;
-  @ContentChild(MatNoDataRow) noDataRow!: MatNoDataRow;
+  // Escape hatch: a list can still project its own `*matNoDataRow`, which wins over the
+  // built-in empty state below.
+  @ContentChild(MatNoDataRow) projectedNoDataRow?: MatNoDataRow;
+  // Declared in this component's own template. View queries never traverse projected
+  // content, so this can never accidentally match a list's override.
+  @ViewChild(MatNoDataRow, { static: true }) defaultNoDataRow!: MatNoDataRow;
 
   @ViewChild(MatTable, { static: true }) table!: MatTable<T>;
   @ViewChild('matTableSort') matTableSort = new MatSort();
@@ -78,6 +84,18 @@ export class ProductTableWrapperComponent<T extends ProductItem> implements Afte
   // shared az/name/id comparator.
   readonly sortDataFunc = input<(sort: Sort, a: T, b: T) => number>(defaultSortFunc);
 
+  // Built-in empty state, shown when the table renders no rows.
+  readonly emptyMessage = input('No data for this product type');
+  // A falsy label means "message only, no shortcut" — for products that can't be created
+  // from their own list page.
+  readonly emptyCreateLabel = input('');
+  readonly canCreate = input(false);
+  // Relative segment by default, resolved against the host list's route; an absolute path
+  // works too, for products created from somewhere else.
+  readonly createLink = input('create');
+  // Must match the width of the list's own `actions` column.
+  readonly actionsColumnWidth = input<'single' | 'double'>('double');
+
   constructor() {
     effect(() => {
       this.initDataSource();
@@ -88,7 +106,7 @@ export class ProductTableWrapperComponent<T extends ProductItem> implements Afte
     this.columnDefs.forEach(columnDef => this.table.addColumnDef(columnDef));
     this.rowDefs.forEach(rowDef => this.table.addRowDef(rowDef));
     this.headerRowDefs.forEach(headerRowDef => this.table.addHeaderRowDef(headerRowDef));
-    this.table.setNoDataRow(this.noDataRow);
+    this.table.setNoDataRow(this.projectedNoDataRow ?? this.defaultNoDataRow);
   }
 
   initDataSource() {

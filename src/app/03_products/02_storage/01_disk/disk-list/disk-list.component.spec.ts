@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { DiskListComponent } from './disk-list.component';
 
@@ -9,6 +10,7 @@ describe('DiskListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DiskListComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DiskListComponent);
