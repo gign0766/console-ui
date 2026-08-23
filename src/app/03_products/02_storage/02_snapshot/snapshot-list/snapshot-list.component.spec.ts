@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { SnapshotListComponent } from './snapshot-list.component';
 
@@ -8,9 +9,9 @@ describe('SnapshotListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SnapshotListComponent]
-    })
-    .compileComponents();
+      imports: [SnapshotListComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(SnapshotListComponent);
     component = fixture.componentInstance;

@@ -2,12 +2,14 @@
   <div class="product-list__header">
     <spx-content-header titleOnly title="Backup"></spx-content-header>
 
-    <div class="product-list__header-create-btn">
-      <a matButton="filled" ariaLabel="Button to create a BaaS" [routerLink]="['create']">
-        <mat-icon>add</mat-icon>
-        Create BaaS
-      </a>
-    </div>
+    @if (canProjectBaaSWrite()) {
+      <div class="product-list__header-create-btn">
+        <a matButton="filled" ariaLabel="Button to create a BaaS" [routerLink]="['create']">
+          <mat-icon>add</mat-icon>
+          Create BaaS
+        </a>
+      </div>
+    }
   </div>
 
   <spx-product-list-filter
@@ -28,7 +30,12 @@
       </div>
     }
 
-    <spx-product-table-wrapper [dataSource]="dataSource()" [columns]="displayedColumns">
+    <spx-product-table-wrapper
+      [dataSource]="dataSource()"
+      [columns]="displayedColumns"
+      emptyMessage="No backups yet."
+      emptyCreateLabel="Create a backup"
+      [canCreate]="canProjectBaaSWrite()">
       <ng-container matColumnDef="scope">
         <mat-header-cell *matHeaderCellDef> Backup Scope </mat-header-cell>
         <mat-cell *matCellDef="let el"> {{ el.scope }}</mat-cell>
@@ -87,13 +94,6 @@
           </mat-menu>
         </mat-cell>
       </ng-container>
-
-      <tr class="d-flex mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center">
-          No product found in this project.
-        </td>
-        <td class="mat-mdc-cell mat-column-actions mat-column-actions--empty mat-column-actions--double-btn"></td>
-      </tr>
 
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>

@@ -2,12 +2,14 @@
   <div class="product-list__header">
     <spx-content-header titleOnly title="Instance"></spx-content-header>
 
-    <div class="product-list__header-create-btn">
-      <a matButton="filled" ariaLabel="Button to create an Instance" [routerLink]="['create']">
-        <mat-icon class="symbols-fill">add_box</mat-icon>
-        Create
-      </a>
-    </div>
+    @if (canProjectInstanceWrite()) {
+      <div class="product-list__header-create-btn">
+        <a matButton="filled" ariaLabel="Button to create an Instance" [routerLink]="['create']">
+          <mat-icon class="symbols-fill">add_box</mat-icon>
+          Create
+        </a>
+      </div>
+    }
   </div>
 
   <spx-product-list-filter
@@ -32,7 +34,12 @@
       </div>
     }
 
-    <spx-product-table-wrapper [dataSource]="dataSource()" [columns]="displayedColumns">
+    <spx-product-table-wrapper
+      [dataSource]="dataSource()"
+      [columns]="displayedColumns"
+      emptyMessage="No instances yet."
+      emptyCreateLabel="Create an instance"
+      [canCreate]="canProjectInstanceWrite()">
       <ng-container matColumnDef="ip">
         <mat-header-cell *matHeaderCellDef>Internal IP</mat-header-cell>
         <mat-cell *matCellDef="let el">
@@ -173,13 +180,6 @@
           </mat-menu>
         </mat-cell>
       </ng-container>
-
-      <tr class="d-flex mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center">
-          No data for this product type
-        </td>
-        <td class="mat-mdc-cell mat-column-actions mat-column-actions--empty mat-column-actions--double-btn"></td>
-      </tr>
 
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>

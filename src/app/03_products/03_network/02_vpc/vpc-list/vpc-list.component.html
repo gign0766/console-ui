@@ -2,12 +2,14 @@
   <div class="product-list__header">
     <spx-content-header titleOnly title="VPC"></spx-content-header>
 
-    <div class="product-list__header-create-btn">
-      <a matButton="filled" ariaLabel="Button to create a VPC" [routerLink]="['create']">
-        <mat-icon>add</mat-icon>
-        Create a VPC
-      </a>
-    </div>
+    @if (canProjectVPCWrite()) {
+      <div class="product-list__header-create-btn">
+        <a matButton="filled" ariaLabel="Button to create a VPC" [routerLink]="['create']">
+          <mat-icon>add</mat-icon>
+          Create a VPC
+        </a>
+      </div>
+    }
   </div>
 
   <spx-product-list-filter
@@ -28,7 +30,12 @@
       </div>
     }
 
-    <spx-product-table-wrapper [dataSource]="dataSource()" [columns]="displayedColumns">
+    <spx-product-table-wrapper
+      [dataSource]="dataSource()"
+      [columns]="displayedColumns"
+      emptyMessage="No VPCs yet."
+      emptyCreateLabel="Create a VPC"
+      [canCreate]="canProjectVPCWrite()">
       <ng-container matColumnDef="actions" stickyEnd>
         <mat-header-cell *matHeaderCellDef class="mat-column-actions--double-btn"></mat-header-cell>
         <mat-cell *matCellDef="let el" class="mat-column-actions--double-btn">
@@ -79,13 +86,6 @@
           </mat-menu>
         </mat-cell>
       </ng-container>
-
-      <tr class="d-flex mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center">
-          No data for this product type
-        </td>
-        <td class="mat-mdc-cell mat-column-actions mat-column-actions--empty mat-column-actions--double-btn"></td>
-      </tr>
 
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>

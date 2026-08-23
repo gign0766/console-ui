@@ -21,7 +21,13 @@
       </div>
     }
 
-    <spx-product-table-wrapper [dataSource]="dataSource()" [columns]="displayedColumns">
+    <spx-product-table-wrapper
+      [dataSource]="dataSource()"
+      [columns]="displayedColumns"
+      emptyMessage="No instance snapshots yet."
+      emptyCreateLabel="Create one from an instance"
+      createLink="/products/compute/instance"
+      [canCreate]="canProjectSnapshotWrite()">
       <ng-container matColumnDef="date">
         <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
         <mat-cell *matCellDef="let el">
@@ -90,13 +96,6 @@
           </mat-menu>
         </mat-cell>
       </ng-container>
-
-      <tr class="d-flex mat-mdc-row" *matNoDataRow>
-        <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center">
-          No data for this product type
-        </td>
-        <td class="mat-mdc-cell mat-column-actions mat-column-actions--empty mat-column-actions--double-btn"></td>
-      </tr>
 
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>

@@ -43,3 +43,17 @@
     </mat-cell>
   </ng-container>
 </mat-table>
+
+<ng-template matNoDataRow>
+  <tr class="d-flex mat-mdc-row">
+    <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center gap-2">
+      <span>{{ emptyMessage() }}</span>
+      @if (canCreate() && emptyCreateLabel()) {
+        <a class="color-primary" [routerLink]="createLink()">{{ emptyCreateLabel() }}</a>
+      }
+    </td>
+    <td
+      class="mat-mdc-cell mat-column-actions mat-column-actions--empty"
+      [class.mat-column-actions--double-btn]="actionsColumnWidth() === 'double'"></td>
+  </tr>
+</ng-template>
