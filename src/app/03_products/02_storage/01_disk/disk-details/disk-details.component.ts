@@ -24,7 +24,7 @@ import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
 import { GridDirective } from '@shared/directives/grid.directive';
-import { PRA_LABEL_KEYS, REPLICATION_ANNOTATION_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS, REPLICATION_ANNOTATION_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
@@ -33,7 +33,7 @@ import { of } from 'rxjs';
 import { environment } from '@env/environment';
 
 interface DiskStatus {
-  isPRA: boolean;
+  isDR: boolean;
   isReplicated: boolean;
 }
 
@@ -106,13 +106,13 @@ export class DiskDetailsComponent extends TabsBase {
   });
 
   diskStatus = computed<DiskStatus>(() => {
-    let isPRA = false;
+    let isDR = false;
     let isReplicated = false;
     if (this.diskProduct.hasValue()) {
       const labels = this.diskProduct.value().pvc?.metadata.labels;
       if (labels) {
         const labelKeys = Object.keys(labels);
-        isPRA = labelKeys.some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = labelKeys.some(v => DR_LABEL_KEYS.includes(v));
       }
 
       const annotations = this.diskProduct.value().pvc?.metadata.annotations;
@@ -122,7 +122,7 @@ export class DiskDetailsComponent extends TabsBase {
       }
     }
 
-    return { isPRA, isReplicated };
+    return { isDR, isReplicated };
   });
 
   replication = computed(() => (this.diskProduct.hasValue() ? this.diskProduct.value().replication : undefined));

@@ -10,7 +10,7 @@
 
   <ng-container matColumnDef="az">
     <mat-header-cell *matHeaderCellDef mat-sort-header>AZ</mat-header-cell>
-    <mat-cell *matCellDef="let el" [class.mat-column-az--pra]="el.isPRA">
+    <mat-cell *matCellDef="let el" [class.mat-column-az--dr]="el.isDR">
       <img
         class="product-list__az-icon"
         [src]="getAzLogoUrl(el.data.codeAZ)"
@@ -27,7 +27,7 @@
 
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
-    <mat-cell *matCellDef="let el" [class.mat-column-name--pra-child]="el.isPRA">
+    <mat-cell *matCellDef="let el" [class.mat-column-name--dr-child]="el.isDR">
       <div class="text-truncate">
         {{ el.data.productName }}
       </div>

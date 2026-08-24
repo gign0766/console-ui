@@ -16,7 +16,7 @@ import { ProductFirewall } from '@products/00_shared/models/product.model';
 import { FirewallService } from '@products/00_shared/services/firewall.service';
 import { isClusterResource } from '@products/00_shared/utils/cluster-utils';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import {
   FIREWALL_REFRESH_KEY,
@@ -31,7 +31,7 @@ import { ProductTableWrapperComponent } from '@products/00_shared/components/pro
 
 interface ProductFirewallItem {
   data: ProductFirewall;
-  isPRA: boolean;
+  isDR: boolean;
   isClusterFirewall: boolean;
 }
 
@@ -90,16 +90,16 @@ export class FirewallListComponent {
   dataSource = computed(() => {
     const fws = this.firewallProduct.hasValue() ? this.firewallProduct.value()! : [];
     const datas: ProductFirewallItem[] = fws.map(i => {
-      let isPRA = false;
+      let isDR = false;
       let isCluster = false;
       if (i.firewall?.metadata.labels) {
-        isPRA = Object.keys(i.firewall.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.firewall.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
         isCluster = isClusterResource(i.firewall.metadata.labels);
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
         isClusterFirewall: isCluster,
       };
     });

@@ -13,7 +13,7 @@ import { AZService } from '@products/00_shared/services/az.service';
 import { InstanceService } from '@products/00_shared/services/instance.service';
 import { KaasService } from '@products/00_shared/services/kaas.service';
 import { AutoRefreshComponent } from '@shared/components/auto-refresh/auto-refresh.component';
-import { PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
 import { StateService } from '@shared/services/state.service';
@@ -21,7 +21,7 @@ import { catchError, firstValueFrom, of } from 'rxjs';
 
 interface ProductInstanceItem {
   data: ProductInstance;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -69,14 +69,14 @@ export class KaasDetailsInstancesComponent {
       instances = [];
     }
     const datas: ProductInstanceItem[] = instances.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.vm?.metadata.labels) {
-        isPRA = Object.keys(i.vm.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.vm.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
 

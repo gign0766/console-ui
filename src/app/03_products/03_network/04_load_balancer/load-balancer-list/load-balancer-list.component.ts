@@ -13,7 +13,7 @@ import { ProductListFilterComponent } from '@products/00_shared/components/produ
 import { ProductLoadBalancer } from '@products/00_shared/models/product.model';
 import { LoadBalancerService } from '@products/00_shared/services/load-balancer.service';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { LOAD_BALANCER_REFRESH_KEY, LocalStorageService } from '@shared/services/local-storage.service';
 import { PermissionService } from '@shared/services/permission.service';
@@ -25,7 +25,7 @@ import { LoadBalancerActions } from '../load-balancer-actions.utils';
 
 interface ProductLoadBalancerItem {
   data: ProductLoadBalancer;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -76,14 +76,14 @@ export class LoadBalancerListComponent {
   dataSource = computed(() => {
     const lbs = this.lbProduct.hasValue() ? this.lbProduct.value()! : [];
     const datas: ProductLoadBalancerItem[] = lbs.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.loadBalancer?.metadata.labels) {
-        isPRA = Object.keys(i.loadBalancer.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.loadBalancer.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
     const dataSource = new MatTableDataSource(datas);

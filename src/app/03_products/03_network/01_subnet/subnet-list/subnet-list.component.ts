@@ -14,7 +14,7 @@ import { ProductSubnet } from '@products/00_shared/models/product.model';
 import { SubnetService } from '@products/00_shared/services/subnet.service';
 import { SubnetActions } from '../subnet-actions.utils';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { SUBNET_REFRESH_KEY, LocalStorageService } from '@shared/services/local-storage.service';
 import { PermissionService } from '@shared/services/permission.service';
@@ -25,7 +25,7 @@ import { ProductTableWrapperComponent } from '@products/00_shared/components/pro
 
 interface ProductSubnetItem {
   data: ProductSubnet;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -76,14 +76,14 @@ export class SubnetListComponent {
     const subnets = this.subnetProduct.hasValue() ? this.subnetProduct.value()! : [];
 
     const datas: ProductSubnetItem[] = subnets.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.subnet?.metadata.labels) {
-        isPRA = Object.keys(i.subnet.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.subnet.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
     const dataSource = new MatTableDataSource(datas);

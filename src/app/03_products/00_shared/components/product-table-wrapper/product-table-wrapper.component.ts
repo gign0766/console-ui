@@ -27,7 +27,7 @@ import { StateService } from '@shared/services/state.service';
 
 export interface ProductItem {
   data: Product;
-  isPRA?: boolean;
+  isDR?: boolean;
 }
 
 export function defaultSortFunc<T extends ProductItem>(sort: Sort, a: T, b: T) {
@@ -47,13 +47,13 @@ export function defaultSortFunc<T extends ProductItem>(sort: Sort, a: T, b: T) {
   }
 }
 
-// Keeps PRA children right below their parent (same eid), whatever the active
+// Keeps DR children right below their parent (same eid), whatever the active
 // sort is: groups sort by their parent's values, children follow the parent.
-export function praGroupSort<T extends ProductItem>(data: T[], cmp: (a: T, b: T) => number): T[] {
+export function drGroupSort<T extends ProductItem>(data: T[], cmp: (a: T, b: T) => number): T[] {
   const groups = new Map<string, { head?: T; children: T[] }>();
   for (const item of data) {
     const group = groups.get(item.data.eid) ?? { children: [] };
-    if (!item.isPRA && !group.head) {
+    if (!item.isDR && !group.head) {
       group.head = item;
     } else {
       group.children.push(item);
@@ -123,14 +123,14 @@ export class ProductTableWrapperComponent<T extends ProductItem> implements Afte
     this.dataSource().sort = this.matTableSort;
 
     this.dataSource().sortData = (data: T[], sort: MatSort): T[] => {
-      return praGroupSort(data, (a, b) => sortFunc(sort, a, b));
+      return drGroupSort(data, (a, b) => sortFunc(sort, a, b));
     };
 
-    this.dataSource().data = praGroupSort(this.dataSource().data, (a, b) => sortFunc(this.defaultSort, a, b));
+    this.dataSource().data = drGroupSort(this.dataSource().data, (a, b) => sortFunc(this.defaultSort, a, b));
   }
 
   trackBy(_: number, product: T) {
-    // a PRA child shares its parent's eid, the AZ disambiguates
+    // a DR child shares its parent's eid, the AZ disambiguates
     return product.data.eid + '|' + (product.data.codeAZ ?? '');
   }
 }

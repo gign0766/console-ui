@@ -69,7 +69,7 @@
     </spx-banner>
   }
 
-  @if (subnetProduct.hasValue() && isPRA()) {
+  @if (subnetProduct.hasValue() && isDR()) {
     <spx-banner [level]="BannerLevelEnum.Warn">
       This resource was created from a restore point during a disaster recovery plan.
     </spx-banner>

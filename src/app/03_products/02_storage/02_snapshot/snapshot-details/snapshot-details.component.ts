@@ -16,7 +16,7 @@ import { DiskService } from '@products/00_shared/services/disk.service';
 import { SnapshotService } from '@products/00_shared/services/snapshot.service';
 import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
@@ -73,11 +73,11 @@ export class SnapshotDetailsComponent extends TabsBase {
   routeParams;
   snapshotProduct;
 
-  isPRA = computed(() => {
+  isDR = computed(() => {
     if (this.snapshotProduct.hasValue()) {
       if (this.snapshotProduct.value().snapshot?.metadata.labels) {
         return Object.keys(this.snapshotProduct.value().snapshot!.metadata.labels!).some(v =>
-          PRA_LABEL_KEYS.includes(v)
+          DR_LABEL_KEYS.includes(v)
         );
       }
     }

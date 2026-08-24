@@ -25,7 +25,7 @@ import { DEFAULT_REFRESH_INTERVAL } from '@shared/models/consts';
 
 interface ProductSSHItem {
   data: ProductSSH;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -73,7 +73,7 @@ export class SshListComponent {
   filterValue: WritableSignal<Map<string, string>> = signal(new Map());
   dataSource = computed(() => {
     const rawDatas = this.sshProduct.value() != null ? this.sshProduct.value()! : [];
-    const datas: ProductSSHItem[] = rawDatas.map(d => ({ data: d, isPRA: false }));
+    const datas: ProductSSHItem[] = rawDatas.map(d => ({ data: d, isDR: false }));
     const dataSource = new MatTableDataSource(datas);
     // Override filterPredicate to use nested object
     dataSource.filterPredicate = this.filterPredicate;

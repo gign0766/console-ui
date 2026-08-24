@@ -22,7 +22,7 @@ import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
 import { GridDirective } from '@shared/directives/grid.directive';
-import { PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
@@ -83,11 +83,11 @@ export class InstanceSnapshotDetailsComponent {
   instanceProduct;
   diskSnapshotProduct;
 
-  isPRA = computed(() => {
+  isDR = computed(() => {
     if (this.instanceSnapshotProduct.hasValue()) {
       if (this.instanceSnapshotProduct.value().vmSnapshot?.metadata.labels) {
         return Object.keys(this.instanceSnapshotProduct.value().vmSnapshot!.metadata.labels!).some(v =>
-          PRA_LABEL_KEYS.includes(v)
+          DR_LABEL_KEYS.includes(v)
         );
       }
     }

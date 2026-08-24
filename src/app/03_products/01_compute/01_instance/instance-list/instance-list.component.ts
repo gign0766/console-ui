@@ -20,7 +20,7 @@ import { InstanceSnapshotService } from '@products/00_shared/services/instance-s
 import { InstanceService } from '@products/00_shared/services/instance.service';
 import { isClusterResource } from '@products/00_shared/utils/cluster-utils';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import {
   INSTANCE_REFRESH_KEY,
@@ -36,7 +36,7 @@ import { InstanceActions } from '../instance-actions.utils';
 
 interface ProductInstanceItem {
   data: ProductInstance;
-  isPRA: boolean;
+  isDR: boolean;
   isClusterInstance: boolean;
 }
 
@@ -108,16 +108,16 @@ export class InstanceListComponent {
   dataSource = computed(() => {
     const instances = this.instanceResource.hasValue() ? this.instanceResource.value()! : [];
     const datas: ProductInstanceItem[] = instances.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.vm?.metadata.labels) {
-        isPRA = Object.keys(i.vm.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.vm.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       const isCluster = isClusterResource(i.vm?.metadata.labels);
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
         isClusterInstance: isCluster,
       };
     });

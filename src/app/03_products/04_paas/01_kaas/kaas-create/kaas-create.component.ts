@@ -99,7 +99,7 @@ export class KaasCreateComponent {
     workersNetPol: this.fb.nonNullable.control<WorkersNetworkPolicies>('default', Validators.required),
   });
 
-  // Disaster Recovery (PRA) toggle + datastore overrides (advanced step). Defaults mirror the sfs-kaas chart.
+  // Disaster Recovery toggle + datastore overrides (advanced step). Defaults mirror the sfs-kaas chart.
   disasterRecovery = signal(false);
   dataStoreFormGroup = this.fb.nonNullable.group({
     storageClassName: this.fb.nonNullable.control(''),

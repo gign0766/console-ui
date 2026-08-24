@@ -13,14 +13,14 @@ import { AZService } from '@products/00_shared/services/az.service';
 import { InstanceService } from '@products/00_shared/services/instance.service';
 import { KaasService } from '@products/00_shared/services/kaas.service';
 import { AutoRefreshComponent } from '@shared/components/auto-refresh/auto-refresh.component';
-import { PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionService } from '@shared/services/permission.service';
 import { StateService } from '@shared/services/state.service';
 import { catchError, of } from 'rxjs';
 
 interface ProductFirewallItem {
   data: ProductFirewall;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -61,14 +61,14 @@ export class KaasDetailsNetpolsComponent {
       instances = [];
     }
     const datas: ProductFirewallItem[] = instances.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.firewall?.metadata.labels) {
-        isPRA = Object.keys(i.firewall.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.firewall.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
 
