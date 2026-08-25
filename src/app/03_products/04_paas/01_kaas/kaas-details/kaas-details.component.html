@@ -67,7 +67,7 @@
     </spx-banner>
   }
 
-  @if (kaasProduct.hasValue() && isPRA()) {
+  @if (kaasProduct.hasValue() && isDR()) {
     <spx-banner [level]="BannerLevelEnum.Warn">
       This resource was created from a restore point during a disaster recovery plan.
     </spx-banner>

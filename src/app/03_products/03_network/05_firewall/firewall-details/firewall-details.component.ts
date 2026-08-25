@@ -17,7 +17,7 @@ import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
 import { GridDirective } from '@shared/directives/grid.directive';
-import { PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
@@ -75,10 +75,10 @@ export class FirewallDetailsComponent {
   routeParams;
   fwProduct;
 
-  isPRA = computed(() => {
+  isDR = computed(() => {
     if (this.fwProduct.hasValue()) {
       if (this.fwProduct.value().firewall?.metadata.labels) {
-        return Object.keys(this.fwProduct.value().firewall!.metadata.labels!).some(v => PRA_LABEL_KEYS.includes(v));
+        return Object.keys(this.fwProduct.value().firewall!.metadata.labels!).some(v => DR_LABEL_KEYS.includes(v));
       }
     }
 

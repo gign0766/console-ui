@@ -16,7 +16,7 @@ export const LABEL_MAX_LENGTH = 253;
 export const CUSTOM_USER_LABEL_PREFIX = 'user.superphenix.net/';
 export const CUSTOM_USER_LABEL_NUMBER = 10;
 
-export const PRA_LABEL_KEYS = ['velero.io/backup-name', 'velero.io/restore-name'];
+export const DR_LABEL_KEYS = ['velero.io/backup-name', 'velero.io/restore-name'];
 export const REPLICATION_ANNOTATION_KEYS = ['replication.storage.openshift.io/volume-replication-name'];
 
 export const APP_NAME_LABEL_KEY = 'app.kubernetes.io/name';

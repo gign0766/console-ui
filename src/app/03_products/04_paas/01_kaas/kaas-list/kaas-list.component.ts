@@ -14,7 +14,7 @@ import { ProductListFilterComponent } from '@products/00_shared/components/produ
 import { ProductKaaS } from '@products/00_shared/models/product.model';
 import { KaasService } from '@products/00_shared/services/kaas.service';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { KAAS_REFRESH_KEY, LocalStorageService } from '@shared/services/local-storage.service';
 import { PermissionService } from '@shared/services/permission.service';
@@ -26,7 +26,7 @@ import { KaasActions } from '../kaas-actions.utils';
 
 interface ProductKaaSItem {
   data: ProductKaaS;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -78,14 +78,14 @@ export class KaasListComponent {
   dataSource = computed(() => {
     const clusters = this.kaasProduct.hasValue() ? this.kaasProduct.value()! : [];
     const datas: ProductKaaSItem[] = clusters.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.cluster?.cluster.metadata.labels) {
-        isPRA = Object.keys(i.cluster.cluster.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.cluster.cluster.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
     const dataSource = new MatTableDataSource(datas);

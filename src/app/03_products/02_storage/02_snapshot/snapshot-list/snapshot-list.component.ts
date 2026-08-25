@@ -13,7 +13,7 @@ import { ProductListFilterComponent } from '@products/00_shared/components/produ
 import { ProductSnapshot } from '@products/00_shared/models/product.model';
 import { SnapshotService } from '@products/00_shared/services/snapshot.service';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { SNAPSHOT_REFRESH_KEY, LocalStorageService } from '@shared/services/local-storage.service';
 import { PermissionService } from '@shared/services/permission.service';
@@ -26,7 +26,7 @@ import { MatDividerModule } from '@angular/material/divider';
 
 interface ProductSnapshotItem {
   data: ProductSnapshot;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -81,14 +81,14 @@ export class SnapshotListComponent {
     const snapshots = this.snapshotProduct.hasValue() ? this.snapshotProduct.value()! : [];
 
     const datas: ProductSnapshotItem[] = snapshots.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.snapshot?.metadata.labels) {
-        isPRA = Object.keys(i.snapshot.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.snapshot.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
     const dataSource = new MatTableDataSource(datas);

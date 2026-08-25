@@ -15,7 +15,7 @@ import { InstanceSnapshotActions } from '../instance-snapshot-actions.utils';
 import { ProductInstance, ProductSnapshot as ProductInstanceSnapshot } from '@products/00_shared/models/product.model';
 import { InstanceSnapshotService } from '@products/00_shared/services/instance-snapshot.service';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { INSTANCE_SNAPSHOT_REFRESH_KEY, LocalStorageService } from '@shared/services/local-storage.service';
 import { PermissionService } from '@shared/services/permission.service';
@@ -28,7 +28,7 @@ import { nonBlockingErrorHandler } from '@shared/http/customHandler';
 
 interface ProductInstanceSnapshotItem {
   data: ProductInstanceSnapshot;
-  isPRA: boolean;
+  isDR: boolean;
 }
 
 @Component({
@@ -87,14 +87,14 @@ export class InstanceSnapshotListComponent {
     const instanceSnapshots = this.instanceSnapshotProduct.value() != null ? this.instanceSnapshotProduct.value()! : [];
 
     const datas: ProductInstanceSnapshotItem[] = instanceSnapshots.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.vmSnapshot?.metadata.labels) {
-        isPRA = Object.keys(i.vmSnapshot.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.vmSnapshot.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
       };
     });
     const dataSource = new MatTableDataSource(datas);

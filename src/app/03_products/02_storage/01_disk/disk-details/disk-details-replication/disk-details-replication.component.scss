@@ -1,0 +1,62 @@
+.replication-tab {
+  color: var(--mat-sys-on-surface);
+
+  &__status {
+    background-color: var(--background);
+    border-radius: var(--br-medium);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    font: var(--mat-sys-body-medium);
+  }
+
+  h4.label {
+    margin-block: 0 0.75rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 1.5rem;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__item-label {
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__item-value {
+    font: var(--mat-sys-body-large);
+    overflow-wrap: anywhere;
+  }
+
+  &__item-value-hint {
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__hr {
+    border-top: 1px solid var(--stroke-default);
+    margin-block: 1rem;
+  }
+
+  &__footnote {
+    font: var(--mat-sys-label-small);
+    color: var(--mat-sys-on-surface-variant);
+    margin-top: 1rem;
+  }
+
+  &__message {
+    color: var(--mat-sys-tertiary);
+    font: var(--mat-sys-body-medium);
+
+    mat-icon {
+      flex-shrink: 0;
+    }
+  }
+}

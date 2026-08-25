@@ -80,9 +80,18 @@ mat-table {
   }
 
   .mat-column-az {
-    &--pra {
-      border-left: 8px solid var(--pra-banner);
+    &--dr {
+      border-left: 8px solid var(--dr-banner);
       padding-left: calc(24px - 8px); // 24px is the default material value
+    }
+  }
+
+  .mat-column-name {
+    &--dr-child::before {
+      content: '\2514'; // tree connector, the row sits under its parent
+      padding-left: 16px;
+      margin-right: 8px;
+      color: var(--mat-sys-outline);
     }
   }
 

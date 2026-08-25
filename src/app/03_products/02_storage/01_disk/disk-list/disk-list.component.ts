@@ -15,7 +15,7 @@ import { ProductListFilterComponent } from '@products/00_shared/components/produ
 import { ProductDisk } from '@products/00_shared/models/product.model';
 import { DiskService } from '@products/00_shared/services/disk.service';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
-import { DEFAULT_REFRESH_INTERVAL, PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DEFAULT_REFRESH_INTERVAL, DR_LABEL_KEYS } from '@shared/models/consts';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { DISK_REFRESH_KEY, DISK_SHOW_CLUSTER_KEY, LocalStorageService } from '@shared/services/local-storage.service';
 import { PermissionService } from '@shared/services/permission.service';
@@ -27,7 +27,7 @@ import { isClusterResource } from '@products/00_shared/utils/cluster-utils';
 
 interface ProductDiskItem {
   data: ProductDisk;
-  isPRA: boolean;
+  isDR: boolean;
   isClusterDisk: boolean;
 }
 
@@ -88,16 +88,16 @@ export class DiskListComponent {
     const disks = this.diskProduct.hasValue() ? this.diskProduct.value()! : [];
 
     const datas: ProductDiskItem[] = disks.map(i => {
-      let isPRA = false;
+      let isDR = false;
       if (i.pvc?.metadata.labels) {
-        isPRA = Object.keys(i.pvc.metadata.labels).some(v => PRA_LABEL_KEYS.includes(v));
+        isDR = Object.keys(i.pvc.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
       const isCluster = isClusterResource(i.pvc?.metadata.labels);
 
       return {
         data: i,
-        isPRA: isPRA,
+        isDR: isDR,
         isClusterDisk: isCluster,
       };
     });

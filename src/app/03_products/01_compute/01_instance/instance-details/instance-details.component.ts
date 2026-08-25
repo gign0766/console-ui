@@ -24,7 +24,7 @@ import { ContentHeaderComponent } from '@shared/components/content-header/conten
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
 import { GridDirective } from '@shared/directives/grid.directive';
 import { nonBlockingErrorHandler } from '@shared/http/customHandler';
-import { PRA_LABEL_KEYS } from '@shared/models/consts';
+import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
@@ -105,10 +105,10 @@ export class InstanceDetailsComponent extends TabsBase {
     return undefined;
   });
 
-  isPRA = computed(() => {
+  isDR = computed(() => {
     if (this.instanceProduct.hasValue()) {
       if (this.instanceProduct.value().vm?.metadata.labels) {
-        return Object.keys(this.instanceProduct.value().vm!.metadata.labels!).some(v => PRA_LABEL_KEYS.includes(v));
+        return Object.keys(this.instanceProduct.value().vm!.metadata.labels!).some(v => DR_LABEL_KEYS.includes(v));
       }
     }
 

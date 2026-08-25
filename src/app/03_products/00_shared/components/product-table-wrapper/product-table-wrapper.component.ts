@@ -26,8 +26,9 @@ import { Product } from '@products/00_shared/models/product.model';
 import { AZService } from '@products/00_shared/services/az.service';
 import { StateService } from '@shared/services/state.service';
 
-interface ProductItem {
+export interface ProductItem {
   data: Product;
+  isDR?: boolean;
 }
 
 export function defaultSortFunc<T extends ProductItem>(sort: Sort, a: T, b: T) {
@@ -45,6 +46,32 @@ export function defaultSortFunc<T extends ProductItem>(sort: Sort, a: T, b: T) {
     default:
       return 0;
   }
+}
+
+// Keeps DR children right below their parent (same eid), whatever the active
+// sort is: groups sort by their parent's values, children follow the parent.
+export function drGroupSort<T extends ProductItem>(data: T[], cmp: (a: T, b: T) => number): T[] {
+  const groups = new Map<string, { head?: T; children: T[] }>();
+  for (const item of data) {
+    const group = groups.get(item.data.eid) ?? { children: [] };
+    if (!item.isDR && !group.head) {
+      group.head = item;
+    } else {
+      group.children.push(item);
+    }
+    groups.set(item.data.eid, group);
+  }
+
+  const flat: { head: T; children: T[] }[] = [];
+  for (const group of groups.values()) {
+    group.children.sort((a, b) => (a.data.codeAZ ?? '').localeCompare(b.data.codeAZ ?? ''));
+    // parent filtered out (AZ filter...): first child takes its place
+    const head = group.head ?? group.children.shift()!;
+    flat.push({ head, children: group.children });
+  }
+
+  flat.sort((a, b) => cmp(a.head, b.head));
+  return flat.flatMap(group => [group.head, ...group.children]);
 }
 
 @Component({
@@ -114,13 +141,14 @@ export class ProductTableWrapperComponent<T extends ProductItem> implements Afte
     this.dataSource().sort = this.matTableSort;
 
     this.dataSource().sortData = (data: T[], sort: MatSort): T[] => {
-      return data.sort((a, b) => sortFunc(sort, a, b));
+      return drGroupSort(data, (a, b) => sortFunc(sort, a, b));
     };
 
-    this.dataSource().data = this.dataSource().data.sort((a, b) => sortFunc(this.defaultSort, a, b));
+    this.dataSource().data = drGroupSort(this.dataSource().data, (a, b) => sortFunc(this.defaultSort, a, b));
   }
 
   trackBy(_: number, product: T) {
-    return product.data.eid;
+    // a DR child shares its parent's eid, the AZ disambiguates
+    return product.data.eid + '|' + (product.data.codeAZ ?? '');
   }
 }
