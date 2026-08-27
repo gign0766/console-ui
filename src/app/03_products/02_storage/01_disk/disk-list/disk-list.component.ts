@@ -23,7 +23,7 @@ import { StateService } from '@shared/services/state.service';
 import { mapHandlerReplacer, mapHandlerReviver } from '@shared/utils/json-utils';
 import { catchError, of } from 'rxjs';
 import { ProductTableWrapperComponent } from '@products/00_shared/components/product-table-wrapper/product-table-wrapper.component';
-import { isClusterResource } from '@products/00_shared/utils/cluster-utils';
+import { isClusterManagedDisk } from '@products/00_shared/utils/cluster-utils';
 
 interface ProductDiskItem {
   data: ProductDisk;
@@ -93,7 +93,7 @@ export class DiskListComponent {
         isDR = Object.keys(i.pvc.metadata.labels).some(v => DR_LABEL_KEYS.includes(v));
       }
 
-      const isCluster = isClusterResource(i.pvc?.metadata.labels);
+      const isCluster = isClusterManagedDisk(i.pvc?.metadata.labels);
 
       return {
         data: i,

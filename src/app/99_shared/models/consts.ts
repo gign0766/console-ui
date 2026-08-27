@@ -22,6 +22,9 @@ export const REPLICATION_ANNOTATION_KEYS = ['replication.storage.openshift.io/vo
 export const APP_NAME_LABEL_KEY = 'app.kubernetes.io/name';
 export const APP_NAME_CLUSTER_LABEL_VALUE = 'sfs-kaas';
 
+export const WORKLOAD_CLASS_LABEL_KEY = 'superphenix.net/workloadClass';
+export const WORKLOAD_CLASS_KAAS_DATASTORE_VALUE = 'kaas-datastore';
+
 export const DEFAULT_REFRESH_INTERVAL = 0;
 
 export const VIRTUAL_IP_RANGE = '198.18.0.0/16';

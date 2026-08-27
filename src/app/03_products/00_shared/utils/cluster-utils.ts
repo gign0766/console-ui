@@ -1,10 +1,22 @@
-import { APP_NAME_CLUSTER_LABEL_VALUE, APP_NAME_LABEL_KEY } from '@shared/models/consts';
+import {
+  APP_NAME_CLUSTER_LABEL_VALUE,
+  APP_NAME_LABEL_KEY,
+  WORKLOAD_CLASS_KAAS_DATASTORE_VALUE,
+  WORKLOAD_CLASS_LABEL_KEY,
+} from '@shared/models/consts';
 
 export function isClusterResource(labels?: Record<string, string>): boolean {
   if (!labels) {
     return false;
   }
   return labels[APP_NAME_LABEL_KEY] === APP_NAME_CLUSTER_LABEL_VALUE;
+}
+
+export function isClusterManagedDisk(labels?: Record<string, string>): boolean {
+  if (!labels) {
+    return false;
+  }
+  return isClusterResource(labels) || labels[WORKLOAD_CLASS_LABEL_KEY] === WORKLOAD_CLASS_KAAS_DATASTORE_VALUE;
 }
 
 // Default values
