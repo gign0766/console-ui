@@ -22,9 +22,12 @@
   /* ── Fonts ──────────────────────────────────────────────────────────────
    * --headline-font : Font family used for headlines and titles.
    * --body-font     : Font family used for body text, labels, and UI copy.
+   *
+   * Prefer a variable font or one with real 500/700 faces: the
+   * theme declares those weights and a regular-only face cannot render them.
    * ──────────────────────────────────────────────────────────────────── */
-  /* --headline-font: JetBrainsMono; */
-  /* --body-font: Sora; */
+  /* --headline-font: 'Funnel Display'; */
+  /* --body-font: 'Google Sans', 'Host Grotesk', sans-serif; */
 
   /* ── Accent · Red ───────────────────────────────────────────────────────
    * Used for error states, destructive actions, and alert-error tokens.
@@ -142,20 +145,22 @@
   /* ── Border Radius ──────────────────────────────────────────────────────
    * Controls the roundness of UI elements (cards, buttons, inputs, etc.).
    *
+   * The default theme is near-rectangular; raise these values for a rounder UI.
+   *
    * --br-none        : 0        — sharp corners.
-   * --br-extra-small : 4px      — subtle rounding (inputs, chips).
-   * --br-small       : 8px      — cards, dialogs.
-   * --br-medium      : 12px     — medium containers.
-   * --br-large       : 16px     — large panels.
-   * --br-extra-large : 32px     — pills, floating action buttons.
+   * --br-extra-small : 2px      — subtle rounding (inputs, chips).
+   * --br-small       : 4px      — cards, dialogs.
+   * --br-medium      : 6px      — medium containers.
+   * --br-large       : 8px      — large panels.
+   * --br-extra-large : 12px     — largest containers, floating action buttons.
    * --br-full        : 9999px   — fully circular (avatars, round buttons).
    * ──────────────────────────────────────────────────────────────────── */
   /* --br-none: 0; */
-  /* --br-extra-small: 4px; */
-  /* --br-small: 8px; */
-  /* --br-medium: 12px; */
-  /* --br-large: 16px; */
-  /* --br-extra-large: 32px; */
+  /* --br-extra-small: 2px; */
+  /* --br-small: 4px; */
+  /* --br-medium: 6px; */
+  /* --br-large: 8px; */
+  /* --br-extra-large: 12px; */
   /* --br-full: 9999px; */
 
   /* ── Alerts ─────────────────────────────────────────────────────────────

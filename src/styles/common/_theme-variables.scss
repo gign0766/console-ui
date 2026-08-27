@@ -11,11 +11,11 @@ html {
   //// Tokens
   // Border radius
   --br-none: 0;
-  --br-extra-small: 4px;
-  --br-small: 8px;
-  --br-medium: 12px;
-  --br-large: 16px;
-  --br-extra-large: 32px;
+  --br-extra-small: 2px;
+  --br-small: 4px;
+  --br-medium: 6px;
+  --br-large: 8px;
+  --br-extra-large: 12px;
   --br-full: 9999px;
 
   // Alert
@@ -324,7 +324,7 @@ html {
   --mat-sys-title-small-weight-prominent: 700;
 
   // Border Radius
-  --mat-sys-corner-none: 0;
+  --mat-sys-corner-none: var(--br-none);
   --mat-sys-corner-extra-small: var(--br-extra-small);
   --mat-sys-corner-small: var(--br-small);
   --mat-sys-corner-medium: var(--br-medium);

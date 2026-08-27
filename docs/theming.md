@@ -26,12 +26,11 @@ The global styles are loaded from `angular.json` in this order:
 | `src/styles/common/material/`             | Directory containing per-component Material overrides.                                                     |
 
 ### Fonts
-
-Three custom fonts are bundled in `src/styles/fonts/`:
-
+- **Funnel Display** — headlines and titles (`--headline-font`).
+- **Google Sans**, falling back to **Host Grotesk** — body text, labels and UI copy (`--body-font`).
+- **JetBrainsMono** — monospace only (code blocks, cloud-init, YAML); referenced directly by a few
+  component styles, not through a token.
 - **Material Symbols Rounded** — icon font.
-- **JetBrainsMono** — used for headlines (`--headline-font`).
-- **Sora** — used for body text (`--body-font`).
 
 ## CSS Custom Properties (Design Tokens)
 

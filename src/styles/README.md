@@ -185,20 +185,37 @@ html {
 
 ### Border radius
 
+The `--mat-sys-corner-*` tokens are not set to Material's stock values: they all derive from the
+project's `--br-*` scale, which is deliberately near-rectangular. Override `--br-*` (via
+`public/styles/theme-override.css`) to change the roundness of the whole UI at once.
+
 ```css
 html {
-  --mat-sys-corner-extra-large: 28px;
-  --mat-sys-corner-extra-large-top: 28px 28px 0 0;
-  --mat-sys-corner-extra-small: 4px;
-  --mat-sys-corner-extra-small-top: 4px 4px 0 0;
-  --mat-sys-corner-full: 9999px;
-  --mat-sys-corner-large: 16px;
-  --mat-sys-corner-large-end: 0 16px 16px 0;
-  --mat-sys-corner-large-start: 16px 0 0 16px;
-  --mat-sys-corner-large-top: 16px 16px 0 0;
-  --mat-sys-corner-medium: 12px;
-  --mat-sys-corner-none: 0;
-  --mat-sys-corner-small: 8px;
+  /* the scale */
+  --br-none: 0;
+  --br-extra-small: 2px;
+  --br-small: 4px;
+  --br-medium: 6px;
+  --br-large: 8px;
+  --br-extra-large: 12px;
+  --br-full: 9999px;
+
+  /* Material corner tokens, derived */
+  --mat-sys-corner-none: var(--br-none);
+  --mat-sys-corner-extra-small: var(--br-extra-small);
+  --mat-sys-corner-small: var(--br-small);
+  --mat-sys-corner-medium: var(--br-medium);
+  --mat-sys-corner-large: var(--br-large);
+  --mat-sys-corner-extra-large: var(--br-extra-large);
+  --mat-sys-corner-full: var(--br-full);
+
+  --mat-sys-corner-extra-small-top: var(--br-extra-small) var(--br-extra-small) 0 0;
+  --mat-sys-corner-small-top: var(--br-small) var(--br-small) 0 0;
+  --mat-sys-corner-small-bottom: 0 0 var(--br-small) var(--br-small);
+  --mat-sys-corner-large-end: 0 var(--br-large) var(--br-large) 0;
+  --mat-sys-corner-large-start: var(--br-large) 0 0 var(--br-large);
+  --mat-sys-corner-large-top: var(--br-large) var(--br-large) 0 0;
+  --mat-sys-corner-extra-large-top: var(--br-extra-large) var(--br-extra-large) 0 0;
 }
 ```
 
