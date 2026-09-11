@@ -134,3 +134,18 @@ export function getProduct(type: string) {
   });
   return path;
 }
+
+/**
+ * Resolve the display title of a product type, e.g. `loadBalancer` -> `Load Balancer`.
+ * Falls back to the type itself for a type the console does not know.
+ */
+export function getProductTitle(type: string) {
+  const typeLink = ProductTypeLink.get(type) || type;
+  for (const product of ProductList) {
+    const item = product.items.find(v => v.link === typeLink);
+    if (item) {
+      return item.title;
+    }
+  }
+  return type;
+}
