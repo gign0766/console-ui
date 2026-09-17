@@ -65,8 +65,8 @@
 
     .footer {
       &__logo {
-        height: 16px;
-        width: 16px;
+        height: var(--footer-logo-height);
+        width: var(--footer-logo-width);
         background-image: var(--footer-image);
         background-size: contain;
         background-repeat: no-repeat;

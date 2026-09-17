@@ -161,6 +161,12 @@ html {
   --background-image: url('/assets/images/background.svg');
   --logo-image: url('/assets/images/logo.svg');
   --footer-image: url('/assets/favicon/favicon.svg');
+  --logo-width: 40px;
+  --logo-height: 32px;
+  --logo-auth-width: 181px;
+  --logo-auth-height: 56px;
+  --footer-logo-width: 16px;
+  --footer-logo-height: 16px;
 
   @include theme.state-color();
   @include theme.custom-color();

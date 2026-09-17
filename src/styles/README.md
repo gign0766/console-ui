@@ -219,6 +219,27 @@ html {
 }
 ```
 
+### Logo sizing
+
+Logos are drawn as `background-image` with `background-size: contain`. Override these in
+`public/styles/theme-override.css` to resize the box they are drawn in.
+
+```css
+html {
+  /* header */
+  --logo-width: 40px;
+  --logo-height: 32px;
+
+  /* auth and inactive-account pages */
+  --logo-auth-width: 181px;
+  --logo-auth-height: 56px;
+
+  /* auth and inactive-account footers */
+  --footer-logo-width: 16px;
+  --footer-logo-height: 16px;
+}
+```
+
 ### Opacity
 
 ```css

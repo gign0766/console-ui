@@ -16,8 +16,8 @@
   &__app-logo {
     align-self: center;
     margin-bottom: 1.5rem;
-    width: 181px;
-    height: 56px;
+    width: var(--logo-auth-width);
+    height: var(--logo-auth-height);
     background-image: var(--logo-image);
     background-size: contain;
     background-repeat: no-repeat;

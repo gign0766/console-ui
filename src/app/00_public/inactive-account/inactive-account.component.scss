@@ -51,8 +51,8 @@
   }
 
   &__logo {
-    width: 181px;
-    height: 56px;
+    width: var(--logo-auth-width);
+    height: var(--logo-auth-height);
     background-image: var(--logo-image);
     background-size: contain;
     background-repeat: no-repeat;
@@ -73,8 +73,12 @@
 
     .footer {
       &__logo {
-        height: 16px;
-        width: 16px;
+        height: var(--footer-logo-height);
+        width: var(--footer-logo-width);
+        background-image: var(--footer-image);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
       }
 
       &__copyright {

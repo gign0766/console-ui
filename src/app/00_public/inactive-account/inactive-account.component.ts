@@ -1,4 +1,3 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
@@ -7,7 +6,7 @@ import { AuthService } from '@shared/services/auth.service';
 
 @Component({
   selector: 'spx-inactive-account',
-  imports: [MatButtonModule, RouterLink, NgOptimizedImage],
+  imports: [MatButtonModule, RouterLink],
   templateUrl: './inactive-account.component.html',
   styleUrl: './inactive-account.component.scss',
 })

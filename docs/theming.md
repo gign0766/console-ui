@@ -26,6 +26,7 @@ The global styles are loaded from `angular.json` in this order:
 | `src/styles/common/material/`             | Directory containing per-component Material overrides.                                                     |
 
 ### Fonts
+
 - **Funnel Display** — headlines and titles (`--headline-font`).
 - **Google Sans**, falling back to **Host Grotesk** — body text, labels and UI copy (`--body-font`).
 - **JetBrainsMono** — monospace only (code blocks, cloud-init, YAML); referenced directly by a few
@@ -55,12 +56,25 @@ The template supports `light-dark()` CSS function for automatic light/dark mode 
 
 Branding assets are stored in `public/assets/images/`:
 
-| File             | Usage                                                               |
-| ---------------- | ------------------------------------------------------------------- |
-| `logo.svg`       | Application logo, referenced via `--logo-image` CSS variable.       |
-| `background.svg` | Background image, referenced via `--background-image` CSS variable. |
+| File             | Usage                                                                       |
+| ---------------- | --------------------------------------------------------------------------- |
+| `logo.svg`       | Application logo, referenced via `--logo-image` CSS variable.               |
+| `background.svg` | Background image, referenced via `--background-image` CSS variable.         |
+| `favicon.svg`    | Footer logo, referenced via `--footer-image` (in `public/assets/favicon/`). |
 
 To replace branding images, either:
 
 - Swap the SVG files in `public/assets/images/`, or
-- Override the `--background-image` and `--logo-image` CSS variables in `theme-override.css`.
+- Override the `--background-image`, `--logo-image` and `--footer-image` CSS variables in
+  `theme-override.css`.
+
+### Logo sizing
+
+Logos are drawn with `background-size: contain`, so they keep their aspect ratio inside their box.
+Override these variables in `theme-override.css` to resize the box:
+
+| Variable                                       | Surface                           | Default |
+| ---------------------------------------------- | --------------------------------- | ------- |
+| `--logo-width` / `--logo-height`               | Header                            | 40×32   |
+| `--logo-auth-width` / `--logo-auth-height`     | Auth and inactive-account pages   | 181×56  |
+| `--footer-logo-width` / `--footer-logo-height` | Auth and inactive-account footers | 16×16   |
