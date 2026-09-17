@@ -5,6 +5,21 @@
       <span #status></span>
     </div>
     <div class="vnc__header-actions">
+      <button
+        matButton="outlined"
+        [matMenuTriggerFor]="guestLayoutMenu"
+        aria-label="Guest keyboard layout"
+        title="Disposition du clavier configurée dans la VM">
+        Clavier VM : {{ guestLayoutShort() }}
+      </button>
+      <mat-menu #guestLayoutMenu="matMenu">
+        @for (layout of guestLayouts; track layout.id) {
+          <button mat-menu-item (click)="setGuestLayout(layout.id)">
+            <mat-icon>{{ layout.id === guestLayout() ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+            {{ layout.label }}
+          </button>
+        }
+      </mat-menu>
       <button matButton="outlined" class="vnc__header-paste" (click)="paste()">Coller</button>
       <button matButton="outlined" class="vnc__header-ctrlAltDel" (click)="sendCtrlAltDel()">Ctrl+Alt+Del</button>
       <button
@@ -19,6 +34,6 @@
   <div class="vnc__screen" #screen></div>
 
   @if (showVirtualKeyboard()) {
-    <spx-virtual-keyboard (keyPress)="onVirtualKeyPress($event)" />
+    <spx-virtual-keyboard [layout]="guestLayout()" (keyPress)="onVirtualKeyPress($event)" />
   }
 </div>

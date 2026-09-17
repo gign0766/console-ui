@@ -15,7 +15,7 @@
 
   <div class="virtual-keyboard__body">
     <div class="virtual-keyboard__main">
-      @for (row of rows; track $index) {
+      @for (row of rows(); track $index) {
         <div class="virtual-keyboard__row">
           @for (key of row; track key.label + $index) {
             <button

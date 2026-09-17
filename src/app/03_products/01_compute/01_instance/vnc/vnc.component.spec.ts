@@ -150,22 +150,100 @@ describe('VNCComponent', () => {
     expect(mockRfb.disconnect).toHaveBeenCalled();
   });
 
-  it('should lock QEMU extended key events to false on connect to fix AZERTY layout', () => {
+  it('should only honour QEMU extended key events for non-US guest layouts', () => {
+    const mockRfb = { _qemuExtKeyEventSupported: false };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (component as any).bindKeyEventModeToGuestLayout(mockRfb);
+
+    // Server announces support during encoding negotiation
+    mockRfb._qemuExtKeyEventSupported = true;
+
+    const cases: { layout: 'us' | 'fr'; expected: boolean }[] = [
+      { layout: 'us', expected: false },
+      { layout: 'fr', expected: true },
+      { layout: 'us', expected: false },
+    ];
+    for (const { layout, expected } of cases) {
+      component.guestLayout.set(layout);
+      expect(mockRfb._qemuExtKeyEventSupported).toBe(expected);
+    }
+
+    // Without server support, the FR layout stays on keysyms
+    mockRfb._qemuExtKeyEventSupported = false;
+    component.guestLayout.set('fr');
+    expect(mockRfb._qemuExtKeyEventSupported).toBeFalse();
+  });
+
+  it('should paste through physical key positions on a French guest', async () => {
     const mockRfb = {
-      _qemuExtKeyEventSupported: true,
+      sendKey: jasmine.createSpy('sendKey'),
+      disconnect: jasmine.createSpy('disconnect'),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component.rfb = mockRfb as any;
+    component.guestLayout.set('fr');
+
+    spyOn(navigator.clipboard, 'readText').and.returnValue(Promise.resolve('a@A~'));
+
+    await component.paste();
+
+    expect(mockRfb.sendKey.calls.allArgs()).toEqual([
+      // 'a' is on the US 'q' key
+      [0x71, 'KeyQ', true],
+      [0x71, 'KeyQ', false],
+      // '@' is AltGr + the '0' key
+      [0xffea, 'AltRight', true],
+      [0x30, 'Digit0', true],
+      [0x30, 'Digit0', false],
+      [0xffea, 'AltRight', false],
+      // 'A' is Shift + the US 'q' key
+      [0xffe1, 'ShiftLeft', true],
+      [0x51, 'KeyQ', true],
+      [0x51, 'KeyQ', false],
+      [0xffe1, 'ShiftLeft', false],
+      // '~' is the dead key AltGr + '2', then Space
+      [0xffea, 'AltRight', true],
+      [0x32, 'Digit2', true],
+      [0x32, 'Digit2', false],
+      [0xffea, 'AltRight', false],
+      [0x20, 'Space', true],
+      [0x20, 'Space', false],
+    ]);
+  });
+
+  it('should remember the guest layout per VM', () => {
+    component.vmName = 'spec-vm';
+    spyOn(localStorage, 'setItem');
+
+    component.setGuestLayout('fr');
+
+    expect(component.guestLayout()).toBe('fr');
+    expect(localStorage.setItem).toHaveBeenCalledWith('spx.vnc.guestLayout.spec-vm', 'fr');
+  });
+
+  it('should wrap the key with AltGr via onVirtualKeyPress', () => {
+    const mockRfb = {
+      sendKey: jasmine.createSpy('sendKey'),
       disconnect: jasmine.createSpy('disconnect'),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.rfb = mockRfb as any;
 
-    component.connectedToServer();
+    component.onVirtualKeyPress({
+      keysym: 0x30,
+      code: 'Digit0',
+      needsShift: false,
+      needsCtrl: false,
+      needsAlt: false,
+      needsAltGr: true,
+    });
 
-    // Property should always read as false via getter
-    expect(mockRfb._qemuExtKeyEventSupported).toBeFalse();
-
-    // Verify writes are silently ignored (no-op setter)
-    mockRfb._qemuExtKeyEventSupported = true;
-    expect(mockRfb._qemuExtKeyEventSupported).toBeFalse();
+    expect(mockRfb.sendKey.calls.allArgs()).toEqual([
+      [0xffea, 'AltRight', true],
+      [0x30, 'Digit0', true],
+      [0x30, 'Digit0', false],
+      [0xffea, 'AltRight', false],
+    ]);
   });
 
   it('should toggle virtual keyboard visibility', () => {
