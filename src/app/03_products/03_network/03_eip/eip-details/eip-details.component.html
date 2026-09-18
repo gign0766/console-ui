@@ -1,6 +1,6 @@
 <div class="product-details main-content">
   <div class="d-flex justify-content-between">
-    <spx-content-header navBack title="EIP Details"></spx-content-header>
+    <spx-content-header navBack title="Elastic IP Details"></spx-content-header>
 
     @if (eipProduct.hasValue()) {
       <div class="d-flex align-items-center gap-3">
@@ -16,7 +16,7 @@
             @if (canProjectEipWrite() && eip.gitops !== 'true') {
               <button
                 mat-menu-item
-                aria-label="Edit EIP button"
+                aria-label="Edit Elastic IP button"
                 [routerLink]="['/products/network/eip', 'update', eip.codeAZ, eip.eid]">
                 <mat-icon>edit</mat-icon>
                 Edit
@@ -33,7 +33,7 @@
 
             @if (canProjectEipWrite() && eip.gitops !== 'true') {
               <mat-divider></mat-divider>
-              <button mat-menu-item aria-label="Delete EIP button" (click)="deleteEIP()">
+              <button mat-menu-item aria-label="Delete Elastic IP button" (click)="deleteEIP()">
                 <mat-icon>delete</mat-icon>
                 Delete
               </button>
@@ -61,7 +61,7 @@
   }
 
   @if (eipProduct.hasValue() && !eipProduct.value().eip) {
-    <spx-banner [level]="BannerLevelEnum.Error">Problem while fetching the EIP on the AZ.</spx-banner>
+    <spx-banner [level]="BannerLevelEnum.Error">Problem while fetching the Elastic IP on the AZ.</spx-banner>
   }
 
   @if (subnetProduct.error()) {
@@ -156,8 +156,8 @@
 
         @if (isSnatLegacy()) {
           <spx-banner [level]="BannerLevelEnum.Warn" multiline>
-            <span>This EIP uses the legacy SNAT implementation.</span>
-            <span>To switch to the new implementation just update the EIP. </span>
+            <span>This Elastic IP uses the legacy SNAT implementation.</span>
+            <span>To switch to the new implementation just update the Elastic IP. </span>
           </spx-banner>
         }
 

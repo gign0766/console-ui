@@ -140,7 +140,7 @@ export class EipUpdateComponent {
     if (this.firstFormGroup.valid && this.secondFormGroup.valid && this.selectedAz()) {
       const ref = this.dialog.open(ConfirmDialog, {
         data: {
-          title: `EIP Update`,
+          title: `Elastic IP Update`,
           html: `
               <span>Are you sure you want to update "${this.eip()!.productName}"?</span>`,
         },

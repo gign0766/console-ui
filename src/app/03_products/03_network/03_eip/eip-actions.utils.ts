@@ -25,10 +25,10 @@ export class EipActions {
   ): Promise<boolean> {
     const ref = dialog.open(ConfirmDialog, {
       data: {
-        title: `Delete EIP`,
+        title: `Delete Elastic IP`,
         html: `
         <p>Are you sure you want to permanently delete "${productName || eid}"?</p>
-        <span class="color-warn"><strong>Warning:</strong> Deleting an EIP is permanent and cannot be undone.</span>
+        <span class="color-warn"><strong>Warning:</strong> Deleting an Elastic IP is permanent and cannot be undone.</span>
         `,
       },
     });

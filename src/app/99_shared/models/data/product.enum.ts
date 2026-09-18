@@ -66,7 +66,7 @@ export const ProductNetwork: ProductCategory = {
     },
     {
       link: 'eip',
-      title: 'EIP',
+      title: 'Elastic IP',
     },
     {
       link: 'load-balancer',

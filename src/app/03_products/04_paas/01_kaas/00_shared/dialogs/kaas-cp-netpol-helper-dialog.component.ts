@@ -19,8 +19,8 @@ import {
           Don't create any policies. Apply user-defined security group rules.<br />
           Custom rules need to accommodate for cluster requirements.<br />
           <i>
-            Make sure to allow traffic to the control plane on ports 7442, 7443 and 7444, from the EIP attached to your
-            node's subnet as well as any network you want to access the cluster from.
+            Make sure to allow traffic to the control plane on ports 7442, 7443 and 7444, from the Elastic IP attached
+            to your node's subnet as well as any network you want to access the cluster from.
           </i>
           <br />
           The control plane can be targeted by the following labels: <br />
