@@ -10,7 +10,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Router, RouterLink } from '@angular/router';
 import { ContainerDisk } from '@products/00_shared/models/compute/instance/container-disk';
-import { BUS_AUTO } from '@products/00_shared/models/compute/instance/instance';
+import { BUS_AUTO, getBusName } from '@products/00_shared/models/compute/instance/instance';
 import { CDRomBus, DiskBus } from '@products/00_shared/models/compute/instance/vmi.model';
 import { ProductDisk, ProductInstance } from '@products/00_shared/models/product.model';
 import { DiskService } from '@products/00_shared/services/disk.service';
@@ -63,6 +63,7 @@ export class InstanceDetailsStorageComponent {
   protected router = inject(Router);
   protected dialog = inject(MatDialog);
   protected BannerLevelEnum = BannerLevelEnum;
+  protected getBusName = getBusName;
 
   displayedColumns: string[] = ['id', 'name', 'type', 'mountType', 'size', 'progress', 'actions'];
 
@@ -107,14 +108,14 @@ export class InstanceDetailsStorageComponent {
       if (product) {
         datas.push({
           type: diskEl.cdrom?.bus ? 'CD-ROM' : 'Disk',
-          bus: diskEl.disk?.bus || BUS_AUTO,
+          bus: diskEl.disk?.bus || BUS_AUTO.value,
           name: product.productName,
           product: product,
         });
       } else {
         datas.push({
           type: 'Driver',
-          bus: diskEl.disk?.bus || BUS_AUTO,
+          bus: diskEl.disk?.bus || BUS_AUTO.value,
           name: diskEl.volumeName,
         });
       }
@@ -225,13 +226,13 @@ export class InstanceDetailsStorageComponent {
           if (volume.cloudInitNoCloud?.secretRef?.name || volume.cloudInitConfigDrive?.secretRef?.name) {
             this.cloudInit.set({
               cloudInitData: instance.cloudInit,
-              bus: disk?.disk?.bus || BUS_AUTO,
+              bus: disk?.disk?.bus || BUS_AUTO.value,
             });
           } else if (volume?.cloudInitNoCloud?.userData || volume?.cloudInitNoCloud?.userDataBase64) {
             // Check for legacy cloud init volume
             this.cloudInit.set({
               cloudInitData: volume?.cloudInitNoCloud?.userData || volume?.cloudInitNoCloud?.userDataBase64,
-              bus: disk?.disk?.bus || BUS_AUTO,
+              bus: disk?.disk?.bus || BUS_AUTO.value,
               legacy: true,
             });
           } else if (volume.dataVolume?.name || volume.persistentVolumeClaim?.claimName) {

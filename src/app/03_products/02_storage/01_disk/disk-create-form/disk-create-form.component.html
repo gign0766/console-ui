@@ -20,10 +20,7 @@
             <mat-option [value]="az.code">
               <div class="d-flex align-items-center gap-2">
                 @if (az.logoUrl) {
-                  <img
-                    class="product-create__az-icon"
-                    [src]="az.logoUrl"
-                    [alt]="az.code + 'icon'" />
+                  <img class="product-create__az-icon" [src]="az.logoUrl" [alt]="az.code + 'icon'" />
                 }
                 <span> {{ az.name }} </span>
               </div>
@@ -91,9 +88,9 @@
       <mat-form-field>
         <mat-label>Source type selection</mat-label>
         <mat-select formControlName="type">
-          @for (type of DiskSourceTypes; track $index) {
+          @for (type of DiskSourceTypes; track type) {
             <mat-option [value]="type">
-              <span> {{ type | titlecase }} </span>
+              <span> {{ getDiskSourceTypeName(type) }} </span>
             </mat-option>
           }
         </mat-select>
@@ -107,7 +104,7 @@
         createForm.get('general.source.type')?.value === 'registry'
       ) {
         <mat-form-field>
-          <mat-label>Url</mat-label>
+          <mat-label>URL</mat-label>
           <input matInput formControlName="url" placeholder="Url source" />
         </mat-form-field>
       }

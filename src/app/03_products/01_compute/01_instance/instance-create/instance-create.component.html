@@ -46,7 +46,7 @@
                 </div>
                 <div class="info-card__block info-card__block--space-evenly">
                   <mat-form-field class="info-card__item">
-                    <mat-label>RunStrategy</mat-label>
+                    <mat-label>Run Strategy</mat-label>
                     <mat-select formControlName="runStrategy">
                       @for (strat of RunStrategy; track strat) {
                         <mat-option [value]="strat">{{ strat }}</mat-option>
@@ -159,7 +159,9 @@
             <button matButton="outlined" matStepperPrevious>Back <mat-icon>arrow_back_ios</mat-icon></button>
             <button
               matButton="filled"
-              [disabled]="!firstFormGroup.valid || !secondFormGroup.valid || !networks || networks.length <= 0 || !networksValid"
+              [disabled]="
+                !firstFormGroup.valid || !secondFormGroup.valid || !networks || networks.length <= 0 || !networksValid
+              "
               (click)="create()">
               Create
             </button>

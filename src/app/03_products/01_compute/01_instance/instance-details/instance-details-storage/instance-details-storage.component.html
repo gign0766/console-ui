@@ -37,7 +37,7 @@
         }
 
         <div class="mt-2">
-          <span> <strong>Mount type:</strong> {{ cloudInit()!.bus }} </span>
+          <span> <strong>Mount type:</strong> {{ getBusName(cloudInit()!.bus) }} </span>
         </div>
       </div>
     </div>
@@ -85,7 +85,7 @@
 
           <ng-container matColumnDef="mountType">
             <mat-header-cell *matHeaderCellDef> Mount Type </mat-header-cell>
-            <mat-cell *matCellDef="let el"> {{ el?.bus }} </mat-cell>
+            <mat-cell *matCellDef="let el"> {{ getBusName(el?.bus) }} </mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="size">

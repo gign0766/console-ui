@@ -14,6 +14,31 @@ export const DiskSourceTypes = [
 
 export type DiskSourceType = (typeof DiskSourceTypes)[number];
 
+export interface DiskSourceTypeOption {
+  value: DiskSourceType;
+  name: string;
+}
+
+export const DISK_SOURCE_TYPE_NAMES: Record<DiskSourceType, string> = {
+  [DiskSourceTypeBlank]: 'Blank',
+  [DiskSourceTypeHttp]: 'HTTP',
+  [DiskSourceTypeSnapshot]: 'Snapshot',
+  [DiskSourceTypeClone]: 'Clone',
+  [DiskSourceTypeRegistry]: 'Registry',
+};
+
+export const DISK_SOURCE_TYPE_OPTIONS: readonly DiskSourceTypeOption[] = DiskSourceTypes.map(type => ({
+  value: type,
+  name: DISK_SOURCE_TYPE_NAMES[type],
+}));
+
+export function getDiskSourceTypeName(type?: string | null): string {
+  if (!type) {
+    return '';
+  }
+  return DISK_SOURCE_TYPE_NAMES[type as DiskSourceType] ?? type;
+}
+
 export class CreateDisk {
   constructor(init: Partial<CreateDisk>) {
     Object.assign(this, init);

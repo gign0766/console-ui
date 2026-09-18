@@ -7,15 +7,27 @@ export const CPU_VALUE_LIST: CpuValue[] = [1, 2, 4, 8, 16, 32];
 export const CPU_DEFAULT_VALUE = 1;
 export type MemoryValue = 1 | 2 | 4 | 8 | 16 | 32 | 64;
 export const MEMORY_VALUE_LIST: MemoryValue[] = [1, 2, 4, 8, 16, 32, 64];
-export const MEMORY_DEFAULT_VALUE = 1;
+export const MEMORY_DEFAULT_VALUE = 4;
 
 export const VM_TYPE_DEFAULT = 'linux';
 
 // BUS type for disk and cloud init
-export const BUS_AUTO = 'auto';
-export const BUS_SATA = 'sata';
-export const BUS_VIRTIO = 'virtio';
-export const BUS_LIST = [BUS_AUTO, BUS_SATA, BUS_VIRTIO];
+export type BusValue = 'auto' | 'sata' | 'virtio';
+
+export interface BusOption {
+  value: BusValue;
+  name: string;
+}
+
+export const BUS_AUTO: BusOption = { value: 'auto', name: 'Auto' };
+export const BUS_SATA: BusOption = { value: 'sata', name: 'SATA' };
+export const BUS_VIRTIO: BusOption = { value: 'virtio', name: 'VirtIO' };
+export const BUS_LIST: BusOption[] = [BUS_AUTO, BUS_SATA, BUS_VIRTIO];
+
+export function getBusName(value?: string | null): string {
+  const found = BUS_LIST.find(b => b.value === value);
+  return found ? found.name : (value ?? '');
+}
 
 // Network model for instance interface
 export const NETWORK_MODEL_AUTO = 'auto';

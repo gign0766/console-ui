@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ContainerDisk } from '@products/00_shared/models/compute/instance/container-disk';
+import { getBusName } from '@products/00_shared/models/compute/instance/instance';
 
 @Component({
   selector: 'spx-container-disk-card',
@@ -26,7 +27,7 @@ import { ContainerDisk } from '@products/00_shared/models/compute/instance/conta
           }
         </span>
         <span class="disk-tile__subtitle">
-          <span class="disk-tile__bus">{{ disk().bus }}</span>
+          <span class="disk-tile__bus">{{ getBusName(disk().bus) }}</span>
           @if (disk().supportedOS.length > 0) {
             <span class="disk-tile__sep">·</span>
             <span class="disk-tile__os">{{ disk().supportedOS.join(', ') }}</span>
@@ -155,6 +156,8 @@ import { ContainerDisk } from '@products/00_shared/models/compute/instance/conta
   `,
 })
 export class ContainerDiskCardComponent {
+  protected readonly getBusName = getBusName;
+
   readonly disk = input.required<ContainerDisk>();
   readonly selected = input.required<boolean>();
   readonly mounted = input<boolean>(false);
