@@ -115,9 +115,9 @@
                   <mat-form-field class="info-card__item">
                     <mat-label>Source type selection</mat-label>
                     <mat-select formControlName="type">
-                      @for (type of DiskSourceTypes; track $index) {
+                      @for (type of DiskSourceTypes; track type) {
                         <mat-option [value]="type">
-                          <span> {{ type | titlecase }} </span>
+                          <span> {{ getDiskSourceTypeName(type) }} </span>
                         </mat-option>
                       }
                     </mat-select>

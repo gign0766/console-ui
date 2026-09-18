@@ -18,6 +18,7 @@ import {
   DiskSourceTypeRegistry,
   DiskSourceTypes,
   DiskSourceTypeSnapshot,
+  getDiskSourceTypeName,
 } from '@products/00_shared/models/storage/disk/create-disk.model';
 import { DiskService } from '@products/00_shared/services/disk.service';
 import { SnapshotService } from '@products/00_shared/services/snapshot.service';
@@ -56,6 +57,7 @@ export class DiskCreateFormComponent implements OnInit {
 
   DiskSourceTypes = DiskSourceTypes;
   DiskSourceTypeBlank = DiskSourceTypeBlank;
+  getDiskSourceTypeName = getDiskSourceTypeName;
   az = input<string | null>();
   initName = input<string | null>();
   /**

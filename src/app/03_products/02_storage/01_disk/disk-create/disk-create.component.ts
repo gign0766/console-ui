@@ -24,6 +24,7 @@ import {
   DiskSourceTypeRegistry,
   DiskSourceTypes,
   DiskSourceTypeSnapshot,
+  getDiskSourceTypeName,
 } from '@products/00_shared/models/storage/disk/create-disk.model';
 import { DiskService } from '@products/00_shared/services/disk.service';
 import { SnapshotService } from '@products/00_shared/services/snapshot.service';
@@ -76,6 +77,7 @@ export class DiskCreateComponent {
 
   DiskSourceTypes = DiskSourceTypes;
   DiskSourceTypeBlank = DiskSourceTypeBlank;
+  getDiskSourceTypeName = getDiskSourceTypeName;
 
   storageClassList = signal<string[] | undefined>(undefined);
   disksProduct = signal<ProductDisk[] | undefined>(undefined);

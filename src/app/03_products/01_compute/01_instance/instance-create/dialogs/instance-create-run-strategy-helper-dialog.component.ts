@@ -9,7 +9,7 @@ import {
 } from '@angular/material/dialog';
 import { RunStrategy } from '@products/00_shared/models/compute/instance/enums/run-strategy.enum';
 
-interface Strategy {
+export interface Strategy {
   name: string;
   description: string;
 }
@@ -39,7 +39,7 @@ export class InstanceCreateRunStrategyHelperDialog {
     {
       name: RunStrategy.Always,
       description:
-        'The system will try to keep the instance always running. Even when shutdown is requested by the user.',
+        'The system will try to keep the instance always running by restarting it when it stops, even when shutdown is requested by the user.',
     },
     {
       name: RunStrategy.RerunOnFailure,
@@ -55,7 +55,7 @@ export class InstanceCreateRunStrategyHelperDialog {
     },
     {
       name: RunStrategy.Halted,
-      description: 'The system ensures that the instance is never started.',
+      description: 'The system will prevent the instance from booting.',
     },
   ];
 }

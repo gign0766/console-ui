@@ -117,7 +117,7 @@ export class InstanceStorageCreateComponent {
   cloudInitForm = this.fb.group({
     custom: this.fb.nonNullable.control(false, Validators.required),
     config: this.fb.nonNullable.control(DEFAULT_CLOUD_INIT, Validators.required),
-    bus: this.fb.nonNullable.control<string>(BUS_AUTO),
+    bus: this.fb.nonNullable.control<string>(BUS_AUTO.value),
   });
 
   // The list of disk selected by the user
@@ -345,7 +345,7 @@ export class InstanceStorageCreateComponent {
     if (this.diskSelected().value) {
       this.diskList.push({
         cdrom: false,
-        bus: BUS_AUTO,
+        bus: BUS_AUTO.value,
         diskExisting: this.diskSelected().getRawValue()! as ProductDisk,
       });
       this.updateOutput();
@@ -399,7 +399,7 @@ export class InstanceStorageCreateComponent {
         if (res) {
           this.diskList.push({
             cdrom: false,
-            bus: BUS_AUTO,
+            bus: BUS_AUTO.value,
             diskToCreate: res,
           });
           this.updateOutput();

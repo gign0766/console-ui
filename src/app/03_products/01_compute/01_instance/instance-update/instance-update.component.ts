@@ -233,7 +233,7 @@ export class InstanceUpdateComponent {
             }
           }
 
-          let cloudInitBus: string = BUS_AUTO;
+          let cloudInitBus: string = BUS_AUTO.value;
           const diskList = res.vm?.spec?.template?.spec?.domain?.devices.disks;
           const disks: CreateInstanceDisk[] = [];
           let counter = 0;
@@ -244,12 +244,12 @@ export class InstanceUpdateComponent {
                 disks.push({
                   order: counter,
                   cdrom: !!d.cdrom,
-                  bus: d.disk?.bus || BUS_AUTO,
+                  bus: d.disk?.bus || BUS_AUTO.value,
                   eid: volume ? extractVolumeEID(volume) : d.name,
                 });
                 counter++;
               } else {
-                cloudInitBus = d.disk?.bus || BUS_AUTO;
+                cloudInitBus = d.disk?.bus || BUS_AUTO.value;
               }
             });
           }
