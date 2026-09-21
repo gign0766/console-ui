@@ -16,6 +16,11 @@
     max-width: 1200px;
   }
 
+  &__toolbar {
+    display: flex;
+    justify-content: flex-end;
+  }
+
   &__row {
     display: flex;
     gap: 4px;

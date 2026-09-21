@@ -1,281 +1,219 @@
-export type GuestLayoutId = 'us' | 'fr';
+import arabic from 'simple-keyboard-layouts/build/layouts/arabic';
+import armenianEastern from 'simple-keyboard-layouts/build/layouts/armenianEastern';
+import armenianWestern from 'simple-keyboard-layouts/build/layouts/armenianWestern';
+import bengali from 'simple-keyboard-layouts/build/layouts/bengali';
+import brazilian from 'simple-keyboard-layouts/build/layouts/brazilian';
+import burmese from 'simple-keyboard-layouts/build/layouts/burmese';
+import chinese from 'simple-keyboard-layouts/build/layouts/chinese';
+import english from 'simple-keyboard-layouts/build/layouts/english';
+import french from 'simple-keyboard-layouts/build/layouts/french';
+import german from 'simple-keyboard-layouts/build/layouts/german';
+import gilaki from 'simple-keyboard-layouts/build/layouts/gilaki';
+import greek from 'simple-keyboard-layouts/build/layouts/greek';
+import hungarian from 'simple-keyboard-layouts/build/layouts/hungarian';
+import italian from 'simple-keyboard-layouts/build/layouts/italian';
+import japanese from 'simple-keyboard-layouts/build/layouts/japanese';
+import korean from 'simple-keyboard-layouts/build/layouts/korean';
+import macedonian from 'simple-keyboard-layouts/build/layouts/macedonian';
+import norwegian from 'simple-keyboard-layouts/build/layouts/norwegian';
+import polish from 'simple-keyboard-layouts/build/layouts/polish';
+import russian from 'simple-keyboard-layouts/build/layouts/russian';
+import spanish from 'simple-keyboard-layouts/build/layouts/spanish';
+import swedish from 'simple-keyboard-layouts/build/layouts/swedish';
+import thai from 'simple-keyboard-layouts/build/layouts/thai';
 
-export const GUEST_LAYOUTS: { id: GuestLayoutId; short: string; label: string }[] = [
-  { id: 'us', short: 'US', label: 'US (QWERTY)' },
-  { id: 'fr', short: 'FR', label: 'FR (AZERTY)' },
-];
+// The guest OS turns key positions (scancodes) into characters with its own keyboard layout, and
+// VNC does not expose which one. The user tells us, and the virtual keyboard and the paste action
+// press the key positions that produce the wanted characters on that layout. The physical
+// keyboard is left to noVNC: it only types as printed when the guest layout matches it.
 
 export interface KeyDef {
   label: string;
   shiftLabel?: string;
-  altGrLabel?: string;
   keysym: number;
   shiftKeysym?: number;
-  code?: string; // DOM KeyboardEvent.code for scancode-based keys
+  code?: string; // DOM KeyboardEvent.code, i.e. the physical position sent as a scancode
   width?: number; // relative width multiplier (default 1)
 }
 
-// One physical key press with its modifiers. `then` chains a second press for dead keys
-// (e.g. `~` is AltGr+2 followed by Space on a French Windows guest).
 export interface KeyStroke {
   code: string;
-  shift?: boolean;
-  altGr?: boolean;
-  then?: KeyStroke;
+  shift: boolean;
 }
 
-// US keysyms [unshifted, shifted] of each physical position.
-const US_POSITIONS: Record<string, [number, number]> = {
-  Backquote: [0x60, 0x7e],
-  Digit1: [0x31, 0x21],
-  Digit2: [0x32, 0x40],
-  Digit3: [0x33, 0x23],
-  Digit4: [0x34, 0x24],
-  Digit5: [0x35, 0x25],
-  Digit6: [0x36, 0x5e],
-  Digit7: [0x37, 0x26],
-  Digit8: [0x38, 0x2a],
-  Digit9: [0x39, 0x28],
-  Digit0: [0x30, 0x29],
-  Minus: [0x2d, 0x5f],
-  Equal: [0x3d, 0x2b],
-  BracketLeft: [0x5b, 0x7b],
-  BracketRight: [0x5d, 0x7d],
-  Backslash: [0x5c, 0x7c],
-  Semicolon: [0x3b, 0x3a],
-  Quote: [0x27, 0x22],
-  Comma: [0x2c, 0x3c],
-  Period: [0x2e, 0x3e],
-  Slash: [0x2f, 0x3f],
-  // A US keyboard has no such key, so a US keysym cannot reach it: it needs its scancode.
-  IntlBackslash: [0x3c, 0x3e],
-  Space: [0x20, 0x20],
-  Enter: [0xff0d, 0xff0d],
-  Tab: [0xff09, 0xff09],
-  ...Object.fromEntries(
-    Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ', (c): [string, [number, number]] => [
-      `Key${c}`,
-      [c.charCodeAt(0) + 0x20, c.charCodeAt(0)],
-    ])
-  ),
+interface PackageLayout {
+  layout: Record<string, string[]>;
+}
+
+// Only layouts whose rows fit the standard ANSI/ISO key positions (see `positionCodes`).
+const PACKAGE_LAYOUTS: Record<string, PackageLayout> = {
+  arabic,
+  armenianEastern,
+  armenianWestern,
+  bengali,
+  brazilian,
+  burmese,
+  chinese,
+  english,
+  french,
+  german,
+  gilaki,
+  greek,
+  hungarian,
+  italian,
+  japanese,
+  korean,
+  macedonian,
+  norwegian,
+  polish,
+  russian,
+  spanish,
+  swedish,
+  thai,
 };
 
-export function usKeysym(code: string, shift: boolean): number {
-  const position = US_POSITIONS[code];
-  return position ? position[shift ? 1 : 0] : 0;
-}
+// Rows whose default and shift levels are swapped in the package data.
+const SWAPPED_LEVEL_ROWS: Record<string, number[]> = {
+  french: [0],
+};
 
-export const US_ROWS: KeyDef[][] = [
-  // Row 1: number row
-  [
-    { label: '`', shiftLabel: '~', keysym: 0x60, shiftKeysym: 0x7e },
-    { label: '1', shiftLabel: '!', keysym: 0x31, shiftKeysym: 0x21 },
-    { label: '2', shiftLabel: '@', keysym: 0x32, shiftKeysym: 0x40 },
-    { label: '3', shiftLabel: '#', keysym: 0x33, shiftKeysym: 0x23 },
-    { label: '4', shiftLabel: '$', keysym: 0x34, shiftKeysym: 0x24 },
-    { label: '5', shiftLabel: '%', keysym: 0x35, shiftKeysym: 0x25 },
-    { label: '6', shiftLabel: '^', keysym: 0x36, shiftKeysym: 0x5e },
-    { label: '7', shiftLabel: '&', keysym: 0x37, shiftKeysym: 0x26 },
-    { label: '8', shiftLabel: '*', keysym: 0x38, shiftKeysym: 0x2a },
-    { label: '9', shiftLabel: '(', keysym: 0x39, shiftKeysym: 0x28 },
-    { label: '0', shiftLabel: ')', keysym: 0x30, shiftKeysym: 0x29 },
-    { label: '-', shiftLabel: '_', keysym: 0x2d, shiftKeysym: 0x5f },
-    { label: '=', shiftLabel: '+', keysym: 0x3d, shiftKeysym: 0x2b },
-    { label: 'Backspace', keysym: 0xff08, code: 'Backspace', width: 2 },
-  ],
-  // Row 2: QWERTY row
-  [
-    { label: 'Tab', keysym: 0xff09, code: 'Tab', width: 1.5 },
-    { label: 'q', keysym: 0x71 },
-    { label: 'w', keysym: 0x77 },
-    { label: 'e', keysym: 0x65 },
-    { label: 'r', keysym: 0x72 },
-    { label: 't', keysym: 0x74 },
-    { label: 'y', keysym: 0x79 },
-    { label: 'u', keysym: 0x75 },
-    { label: 'i', keysym: 0x69 },
-    { label: 'o', keysym: 0x6f },
-    { label: 'p', keysym: 0x70 },
-    { label: '[', shiftLabel: '{', keysym: 0x5b, shiftKeysym: 0x7b },
-    { label: ']', shiftLabel: '}', keysym: 0x5d, shiftKeysym: 0x7d },
-    { label: '\\', shiftLabel: '|', keysym: 0x5c, shiftKeysym: 0x7c },
-  ],
-  // Row 3: home row
-  [
-    { label: 'Caps', keysym: 0xffe5, width: 1.8 },
-    { label: 'a', keysym: 0x61 },
-    { label: 's', keysym: 0x73 },
-    { label: 'd', keysym: 0x64 },
-    { label: 'f', keysym: 0x66 },
-    { label: 'g', keysym: 0x67 },
-    { label: 'h', keysym: 0x68 },
-    { label: 'j', keysym: 0x6a },
-    { label: 'k', keysym: 0x6b },
-    { label: 'l', keysym: 0x6c },
-    { label: ';', shiftLabel: ':', keysym: 0x3b, shiftKeysym: 0x3a },
-    { label: "'", shiftLabel: '"', keysym: 0x27, shiftKeysym: 0x22 },
-    { label: 'Enter', keysym: 0xff0d, code: 'Enter', width: 2.2 },
-  ],
-  // Row 4: shift row
-  [
-    { label: 'Shift', keysym: 0xffe1, width: 2.5 },
-    { label: 'z', keysym: 0x7a },
-    { label: 'x', keysym: 0x78 },
-    { label: 'c', keysym: 0x63 },
-    { label: 'v', keysym: 0x76 },
-    { label: 'b', keysym: 0x62 },
-    { label: 'n', keysym: 0x6e },
-    { label: 'm', keysym: 0x6d },
-    { label: ',', shiftLabel: '<', keysym: 0x2c, shiftKeysym: 0x3c },
-    { label: '.', shiftLabel: '>', keysym: 0x2e, shiftKeysym: 0x3e },
-    { label: '/', shiftLabel: '?', keysym: 0x2f, shiftKeysym: 0x3f },
-    { label: 'Shift', keysym: 0xffe1, width: 2.5 },
-  ],
-  // Row 5: bottom row
-  [
-    { label: 'Ctrl', keysym: 0xffe3, width: 1.5 },
-    { label: 'Alt', keysym: 0xffe9, width: 1.5 },
-    { label: 'Space', keysym: 0x20, width: 5 },
-    { label: 'Win', keysym: 0xffeb, code: 'MetaLeft', width: 1.5 },
-    { label: 'Alt', keysym: 0xffea, width: 1.5 },
-  ],
-];
+const LABEL_OVERRIDES: Record<string, string> = {
+  english: 'English (US)',
+};
 
-// A printable key of a non-US layout. Labels show what the guest types, keysyms are the US ones
-// of that physical position (see the header comment).
-function positional(code: string, label: string, shiftLabel?: string, altGrLabel?: string): KeyDef {
-  return {
-    label,
-    shiftLabel: shiftLabel ?? (/^[a-z]$/.test(label) ? label.toUpperCase() : undefined),
-    altGrLabel,
-    keysym: usKeysym(code, false),
-    shiftKeysym: usKeysym(code, true),
-    code,
-  };
-}
+export const DEFAULT_GUEST_LAYOUT = 'english';
 
-// French AZERTY as laid out by Windows (`^`, `¨`, AltGr+2 `~` and AltGr+7 `` ` `` are dead keys).
-export const FR_ROWS: KeyDef[][] = [
-  [
-    positional('Backquote', '²'),
-    positional('Digit1', '&', '1'),
-    positional('Digit2', 'é', '2', '~'),
-    positional('Digit3', '"', '3', '#'),
-    positional('Digit4', "'", '4', '{'),
-    positional('Digit5', '(', '5', '['),
-    positional('Digit6', '-', '6', '|'),
-    positional('Digit7', 'è', '7', '`'),
-    positional('Digit8', '_', '8', '\\'),
-    positional('Digit9', 'ç', '9', '^'),
-    positional('Digit0', 'à', '0', '@'),
-    positional('Minus', ')', '°', ']'),
-    positional('Equal', '=', '+', '}'),
-    { label: 'Backspace', keysym: 0xff08, code: 'Backspace', width: 2 },
-  ],
-  [
-    { label: 'Tab', keysym: 0xff09, code: 'Tab', width: 1.5 },
-    positional('KeyQ', 'a'),
-    positional('KeyW', 'z'),
-    positional('KeyE', 'e', undefined, '€'),
-    positional('KeyR', 'r'),
-    positional('KeyT', 't'),
-    positional('KeyY', 'y'),
-    positional('KeyU', 'u'),
-    positional('KeyI', 'i'),
-    positional('KeyO', 'o'),
-    positional('KeyP', 'p'),
-    positional('BracketLeft', '^', '¨'),
-    positional('BracketRight', '$', '£', '¤'),
-  ],
-  [
-    { label: 'Caps', keysym: 0xffe5, width: 1.8 },
-    positional('KeyA', 'q'),
-    positional('KeyS', 's'),
-    positional('KeyD', 'd'),
-    positional('KeyF', 'f'),
-    positional('KeyG', 'g'),
-    positional('KeyH', 'h'),
-    positional('KeyJ', 'j'),
-    positional('KeyK', 'k'),
-    positional('KeyL', 'l'),
-    positional('Semicolon', 'm'),
-    positional('Quote', 'ù', '%'),
-    positional('Backslash', '*', 'µ'),
-    { label: 'Enter', keysym: 0xff0d, code: 'Enter', width: 2.2 },
-  ],
-  [
-    { label: 'Shift', keysym: 0xffe1, width: 2 },
-    positional('IntlBackslash', '<', '>'),
-    positional('KeyZ', 'w'),
-    positional('KeyX', 'x'),
-    positional('KeyC', 'c'),
-    positional('KeyV', 'v'),
-    positional('KeyB', 'b'),
-    positional('KeyN', 'n'),
-    positional('KeyM', ',', '?'),
-    positional('Comma', ';', '.'),
-    positional('Period', ':', '/'),
-    positional('Slash', '!', '§'),
-    { label: 'Shift', keysym: 0xffe1, width: 2 },
-  ],
-  [
-    { label: 'Ctrl', keysym: 0xffe3, width: 1.5 },
-    { label: 'Alt', keysym: 0xffe9, width: 1.5 },
-    { label: 'Space', keysym: 0x20, code: 'Space', width: 5 },
-    { label: 'Win', keysym: 0xffeb, code: 'MetaLeft', width: 1.5 },
-    { label: 'AltGr', keysym: 0xffea, width: 1.5 },
-  ],
-];
+// Ids stored by the previous layout picker.
+const LEGACY_LAYOUT_IDS: Record<string, string> = { us: 'english', fr: 'french' };
 
-function buildCharMap(rows: KeyDef[][]): Record<string, KeyStroke> {
-  const map: Record<string, KeyStroke> = {
-    ' ': { code: 'Space' },
-    '\n': { code: 'Enter' },
-    '\t': { code: 'Tab' },
-  };
-  for (const key of rows.flat()) {
-    if (!key.code || key.label.length !== 1) continue;
-    map[key.label] = { code: key.code };
-    if (key.shiftLabel) map[key.shiftLabel] = { code: key.code, shift: true };
-    if (key.altGrLabel) map[key.altGrLabel] = { code: key.code, altGr: true };
+const DIGITS_ROW = ['Backquote', ...Array.from('1234567890', d => `Digit${d}`), 'Minus', 'Equal'];
+const TOP_ROW = [...Array.from('QWERTYUIOP', c => `Key${c}`), 'BracketLeft', 'BracketRight'];
+const HOME_ROW = [...Array.from('ASDFGHJKL', c => `Key${c}`), 'Semicolon', 'Quote'];
+const BOTTOM_ROW = [...Array.from('ZXCVBNM', c => `Key${c}`), 'Comma', 'Period', 'Slash'];
+
+// Physical positions of the printable keys of a row, from its number of keys. The Backslash key
+// ends the top row on ANSI keyboards and the home row on ISO ones; the bottom row may start with
+// the ISO IntlBackslash key and end with the ABNT2 IntlRo key.
+function positionCodes(row: number, count: number): string[] | null {
+  let codes: string[];
+  switch (row) {
+    case 0:
+      codes = DIGITS_ROW;
+      break;
+    case 1:
+      codes = count === TOP_ROW.length ? TOP_ROW : [...TOP_ROW, 'Backslash'];
+      break;
+    case 2:
+      codes = count === HOME_ROW.length ? HOME_ROW : [...HOME_ROW, 'Backslash'];
+      break;
+    default:
+      codes = BOTTOM_ROW;
+      if (count > BOTTOM_ROW.length) codes = ['IntlBackslash', ...codes];
+      if (count > BOTTOM_ROW.length + 1) codes = [...codes, 'IntlRo'];
   }
-  return map;
+  return codes.length === count ? codes : null;
 }
 
-function buildFrCharMap(): Record<string, KeyStroke> {
-  const map = buildCharMap(FR_ROWS);
-  const space: KeyStroke = { code: 'Space' };
+export function charToKeysym(char: string): number {
+  const codePoint = char.codePointAt(0) ?? 0;
+  if ((codePoint >= 0x20 && codePoint <= 0x7e) || (codePoint >= 0xa0 && codePoint <= 0xff)) {
+    return codePoint;
+  }
+  // Unicode keysym
+  return codePoint >= 0x100 ? 0x01000000 | codePoint : 0;
+}
 
-  const circumflex: KeyStroke = { code: 'BracketLeft' };
-  const diaeresis: KeyStroke = { code: 'BracketLeft', shift: true };
-  const tilde: KeyStroke = { code: 'Digit2', altGr: true };
-  const grave: KeyStroke = { code: 'Digit7', altGr: true };
+function printableTokens(row: string): string[] {
+  return row.split(' ').filter(token => token && !/^\{.*\}$/.test(token));
+}
 
-  // AltGr+9 types `^` in one press. The `^` key next to `p` is a dead key.
-  map['^'] = { code: 'Digit9', altGr: true };
-  map['¨'] = { ...diaeresis, then: space };
-  map['~'] = { ...tilde, then: space };
-  map['`'] = { ...grave, then: space };
+// The printable keys of the four main rows, or null when the layout does not fit the standard
+// key positions.
+function printableRows(id: string): KeyDef[][] | null {
+  const layout = PACKAGE_LAYOUTS[id]?.layout;
+  if (!layout?.['default'] || !layout['shift']) return null;
 
-  const composed: [KeyStroke, string, string][] = [
-    [circumflex, 'aeiou', 'âêîôû'],
-    [diaeresis, 'aeiouy', 'äëïöüÿ'],
-    [tilde, 'ano', 'ãñõ'],
-    [grave, 'io', 'ìò'],
+  const rows: KeyDef[][] = [];
+  for (let row = 0; row < 4; row++) {
+    const swapped = SWAPPED_LEVEL_ROWS[id]?.includes(row);
+    const labels = printableTokens(layout[swapped ? 'shift' : 'default'][row] ?? '');
+    const shiftLabels = printableTokens(layout[swapped ? 'default' : 'shift'][row] ?? '');
+    const codes = positionCodes(row, labels.length);
+    if (!codes || shiftLabels.length !== labels.length) return null;
+
+    rows.push(
+      labels.map((label, i) => ({
+        label,
+        shiftLabel: shiftLabels[i],
+        keysym: charToKeysym(label),
+        shiftKeysym: charToKeysym(shiftLabels[i]),
+        code: codes[i],
+      }))
+    );
+  }
+  // The Backslash key sits on exactly one of the two rows.
+  const backslashes = rows.flat().filter(key => key.code === 'Backslash').length;
+  return backslashes === 1 ? rows : null;
+}
+
+function humanize(id: string): string {
+  const spaced = id.replace(/([a-z])([A-Z])/g, '$1 $2');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+export const GUEST_LAYOUTS: { id: string; label: string }[] = Object.keys(PACKAGE_LAYOUTS)
+  .filter(id => printableRows(id) !== null)
+  .map(id => ({ id, label: LABEL_OVERRIDES[id] ?? humanize(id) }))
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+export function resolveGuestLayout(id: string | null): string {
+  const resolved = LEGACY_LAYOUT_IDS[id ?? ''] ?? id;
+  return GUEST_LAYOUTS.find(l => l.id === resolved)?.id ?? DEFAULT_GUEST_LAYOUT;
+}
+
+// Rows of the virtual keyboard: the printable keys of the layout inside our own frame of
+// function and modifier keys.
+export function buildRows(id: string): KeyDef[][] {
+  const [digits, top, home, bottom] = printableRows(resolveGuestLayout(id))!;
+  const isoShift = bottom[0].code === 'IntlBackslash';
+
+  return [
+    [...digits, { label: 'Backspace', keysym: 0xff08, code: 'Backspace', width: 2 }],
+    [{ label: 'Tab', keysym: 0xff09, code: 'Tab', width: 1.5 }, ...top],
+    [
+      { label: 'Caps', keysym: 0xffe5, width: 1.8 },
+      ...home,
+      { label: 'Enter', keysym: 0xff0d, code: 'Enter', width: 2.2 },
+    ],
+    [
+      { label: 'Shift', keysym: 0xffe1, width: isoShift ? 2 : 2.5 },
+      ...bottom,
+      { label: 'Shift', keysym: 0xffe1, width: isoShift ? 2 : 2.5 },
+    ],
+    [
+      { label: 'Ctrl', keysym: 0xffe3, width: 1.5 },
+      { label: 'Alt', keysym: 0xffe9, width: 1.5 },
+      { label: 'Space', keysym: 0x20, code: 'Space', width: 5 },
+      { label: 'Win', keysym: 0xffeb, code: 'MetaLeft', width: 1.5 },
+      { label: 'AltGr', keysym: 0xffea, width: 1.5 },
+    ],
   ];
-  for (const [dead, bases, results] of composed) {
-    Array.from(bases).forEach((base, i) => {
-      const lower = Array.from(results)[i];
-      map[lower] = { ...dead, then: map[base] };
-      if (lower !== 'ÿ') {
-        map[lower.toUpperCase()] = { ...dead, then: map[base.toUpperCase()] };
-      }
-    });
-  }
-  for (const [base, upper] of [['a', 'À'], ['e', 'È'], ['u', 'Ù']]) {
-    map[upper] = { ...grave, then: map[base.toUpperCase()] };
-  }
-  return map;
 }
 
-export const FR_CHAR_MAP: Record<string, KeyStroke> = buildFrCharMap();
+// Key press typing each character on the layout. Characters of the AltGr level and those
+// composed with dead keys are not covered.
+export function buildCharMap(id: string): Map<string, KeyStroke> {
+  const map = new Map<string, KeyStroke>();
+  const keys = printableRows(resolveGuestLayout(id))!.flat();
+  // Shift level first so that the unshifted key wins when a character is on both.
+  for (const key of keys) {
+    if (key.shiftLabel) map.set(key.shiftLabel, { code: key.code!, shift: true });
+  }
+  for (const key of keys) {
+    map.set(key.label, { code: key.code!, shift: false });
+  }
+  map.set(' ', { code: 'Space', shift: false });
+  map.set('\n', { code: 'Enter', shift: false });
+  map.set('\t', { code: 'Tab', shift: false });
+  return map;
+}

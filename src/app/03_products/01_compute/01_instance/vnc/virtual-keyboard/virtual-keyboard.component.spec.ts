@@ -31,12 +31,12 @@ describe('VirtualKeyboardComponent', () => {
     const emitted: { keysym: number; code?: string; needsShift: boolean; needsCtrl: boolean; needsAlt: boolean }[] = [];
     component.keyPress.subscribe(e => emitted.push(e));
 
-    // Click 'a' key (keysym 0x61) — no code for printable characters
+    // Click 'a' key (keysym 0x61) with the code of its position
     const aKey = component.rows()[2][1]; // home row, second key
     component.onKeyClick(aKey);
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual({ keysym: 0x61, code: undefined, needsShift: false, needsCtrl: false, needsAlt: false });
+    expect(emitted[0]).toEqual({ keysym: 0x61, code: 'KeyA', needsShift: false, needsCtrl: false, needsAlt: false });
   });
 
   it('should emit uppercase keysym when shift is active', () => {
@@ -53,7 +53,7 @@ describe('VirtualKeyboardComponent', () => {
     component.onKeyClick(aKey);
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual({ keysym: 0x41, code: undefined, needsShift: true, needsCtrl: false, needsAlt: false });
+    expect(emitted[0]).toEqual({ keysym: 0x41, code: 'KeyA', needsShift: true, needsCtrl: false, needsAlt: false });
     // Shift should auto-release
     expect(component.shiftActive()).toBeFalse();
   });
@@ -70,7 +70,7 @@ describe('VirtualKeyboardComponent', () => {
     component.onKeyClick(oneKey);
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual({ keysym: 0x21, code: undefined, needsShift: true, needsCtrl: false, needsAlt: false });
+    expect(emitted[0]).toEqual({ keysym: 0x21, code: 'Digit1', needsShift: true, needsCtrl: false, needsAlt: false });
   });
 
   it('should toggle caps lock and keep it active after key press', () => {
@@ -84,14 +84,14 @@ describe('VirtualKeyboardComponent', () => {
 
     // Click 'a' -> should emit 'A'
     component.onKeyClick(component.rows()[2][1]);
-    expect(emitted[0]).toEqual({ keysym: 0x41, code: undefined, needsShift: true, needsCtrl: false, needsAlt: false });
+    expect(emitted[0]).toEqual({ keysym: 0x41, code: 'KeyA', needsShift: true, needsCtrl: false, needsAlt: false });
 
     // Caps lock should remain active
     expect(component.capsLock()).toBeTrue();
 
     // Click 'a' again -> still 'A'
     component.onKeyClick(component.rows()[2][1]);
-    expect(emitted[1]).toEqual({ keysym: 0x41, code: undefined, needsShift: true, needsCtrl: false, needsAlt: false });
+    expect(emitted[1]).toEqual({ keysym: 0x41, code: 'KeyA', needsShift: true, needsCtrl: false, needsAlt: false });
   });
 
   it('should show shifted labels when shift is active', () => {
@@ -167,7 +167,7 @@ describe('VirtualKeyboardComponent', () => {
     component.onKeyClick(vKey);
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual({ keysym: 0x76, code: undefined, needsShift: false, needsCtrl: true, needsAlt: false });
+    expect(emitted[0]).toEqual({ keysym: 0x76, code: 'KeyV', needsShift: false, needsCtrl: true, needsAlt: false });
     // Ctrl should auto-release
     expect(component.ctrlActive()).toBeFalse();
   });
@@ -187,7 +187,7 @@ describe('VirtualKeyboardComponent', () => {
     component.onKeyClick(aKey);
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual({ keysym: 0x61, code: undefined, needsShift: false, needsCtrl: false, needsAlt: true });
+    expect(emitted[0]).toEqual({ keysym: 0x61, code: 'KeyA', needsShift: false, needsCtrl: false, needsAlt: true });
     // Alt should auto-release
     expect(component.altActive()).toBeFalse();
   });
@@ -229,11 +229,11 @@ describe('VirtualKeyboardComponent', () => {
 
   describe('French layout', () => {
     beforeEach(() => {
-      fixture.componentRef.setInput('layout', 'fr');
+      fixture.componentRef.setInput('layout', 'french');
       fixture.detectChanges();
     });
 
-    it('should show AZERTY labels for each modifier level', () => {
+    it('should show AZERTY labels for the default and shift levels', () => {
       const aKey = component.rows()[1][1];
       const zeroKey = component.rows()[0][10];
       expect(component.getKeyLabel(aKey)).toBe('a');
@@ -244,9 +244,9 @@ describe('VirtualKeyboardComponent', () => {
       expect(component.getKeyLabel(zeroKey)).toBe('0');
       component.onKeyClick(component.rows()[3][0]);
 
+      // The layout data has no AltGr level: labels stay on the default one
       component.onKeyClick(component.rows()[4][4]); // AltGr
-      expect(component.getKeyLabel(aKey)).toBe('');
-      expect(component.getKeyLabel(zeroKey)).toBe('@');
+      expect(component.getKeyLabel(zeroKey)).toBe('à');
     });
 
     it('should emit the physical position of the clicked key', () => {
@@ -264,12 +264,19 @@ describe('VirtualKeyboardComponent', () => {
       component.onKeyClick(zeroKey);
 
       expect(emitted).toEqual([
-        { keysym: 0x71, code: 'KeyQ', needsShift: false, needsCtrl: false, needsAlt: false },
-        { keysym: 0x51, code: 'KeyQ', needsShift: true, needsCtrl: false, needsAlt: false },
-        { keysym: 0x30, code: 'Digit0', needsShift: false, needsCtrl: false, needsAlt: false, needsAltGr: true },
+        { keysym: 0x61, code: 'KeyQ', needsShift: false, needsCtrl: false, needsAlt: false },
+        { keysym: 0x41, code: 'KeyQ', needsShift: true, needsCtrl: false, needsAlt: false },
+        { keysym: 0xe0, code: 'Digit0', needsShift: false, needsCtrl: false, needsAlt: false, needsAltGr: true },
       ]);
       // AltGr should auto-release
       expect(component.altGrActive()).toBeFalse();
     });
+  });
+
+  it('should offer a sticky AltGr on every layout', () => {
+    const altGrKey = component.rows()[4][4];
+    component.onKeyClick(altGrKey);
+    expect(component.altGrActive()).toBeTrue();
+    expect(component.altActive()).toBeFalse();
   });
 });

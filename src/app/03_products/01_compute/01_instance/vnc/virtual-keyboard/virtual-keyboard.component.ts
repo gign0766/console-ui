@@ -1,14 +1,24 @@
-import { Component, computed, input, output, signal } from '@angular/core';
-import { FR_ROWS, GuestLayoutId, KeyDef, US_ROWS } from '../keyboard-layouts';
+import { Component, computed, model, output, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { DEFAULT_GUEST_LAYOUT, GUEST_LAYOUTS, KeyDef, buildRows } from '../keyboard-layouts';
 
 @Component({
   selector: 'spx-virtual-keyboard',
-  imports: [],
+  imports: [MatButtonModule, MatIcon, MatMenuModule],
   templateUrl: './virtual-keyboard.component.html',
   styleUrl: './virtual-keyboard.component.scss',
 })
 export class VirtualKeyboardComponent {
-  layout = input<GuestLayoutId>('us');
+  // Keyboard layout configured in the guest OS: labels show what each key position types there.
+  layout = model(DEFAULT_GUEST_LAYOUT);
+
+  // Asks the host to type the clipboard text into the VM with the selected layout.
+  pasteRequest = output<void>();
+
+  readonly layouts = GUEST_LAYOUTS;
+  layoutLabel = computed(() => GUEST_LAYOUTS.find(l => l.id === this.layout())?.label ?? '');
 
   keyPress = output<{
     keysym: number;
@@ -45,7 +55,7 @@ export class VirtualKeyboardComponent {
     { label: 'F12', keysym: 0xffc9, code: 'F12' },
   ];
 
-  readonly rows = computed(() => (this.layout() === 'fr' ? FR_ROWS : US_ROWS));
+  readonly rows = computed(() => buildRows(this.layout()));
 
   readonly navKeys: KeyDef[] = [
     { label: 'Ins', keysym: 0xff63, code: 'Insert' },
@@ -61,33 +71,18 @@ export class VirtualKeyboardComponent {
     right: { label: '→', keysym: 0xff53, code: 'ArrowRight' } as KeyDef,
   };
 
-  private static readonly LETTER_KEYSYMS = new Set(Array.from({ length: 26 }, (_, i) => 0x61 + i));
-
   isShifted(): boolean {
     return this.shiftActive() !== this.capsLock(); // XOR
   }
 
-  // Layouts with an AltGr level turn the right Alt key into a sticky AltGr.
+  // The right Alt key is a sticky AltGr. The layout data has no AltGr level, so labels do not
+  // change while it is active.
   private isAltGrKey(key: KeyDef): boolean {
-    return key.keysym === VirtualKeyboardComponent.XK_ALT_R && this.layout() !== 'us';
-  }
-
-  // Ignore a pending AltGr once the user switches to a layout with no AltGr key to release it.
-  private isAltGrOn(): boolean {
-    return this.altGrActive() && this.layout() !== 'us';
+    return key.keysym === VirtualKeyboardComponent.XK_ALT_R;
   }
 
   getKeyLabel(key: KeyDef): string {
-    if (this.isAltGrOn() && key.shiftKeysym) {
-      return key.altGrLabel ?? '';
-    }
-    if (this.isShifted()) {
-      if (key.shiftLabel) return key.shiftLabel;
-      if (VirtualKeyboardComponent.LETTER_KEYSYMS.has(key.keysym)) {
-        return key.label.toUpperCase();
-      }
-    }
-    return key.label;
+    return (this.isShifted() && key.shiftLabel) || key.label;
   }
 
   onKeyClick(key: KeyDef) {
@@ -108,7 +103,7 @@ export class VirtualKeyboardComponent {
       this.altGrActive.update(v => !v);
       return;
     }
-    if (key.keysym === VirtualKeyboardComponent.XK_ALT_L || key.keysym === VirtualKeyboardComponent.XK_ALT_R) {
+    if (key.keysym === VirtualKeyboardComponent.XK_ALT_L) {
       this.altActive.update(v => !v);
       return;
     }
@@ -117,14 +112,11 @@ export class VirtualKeyboardComponent {
     const needsCtrl = this.ctrlActive();
     const needsAlt = this.altActive();
 
-    if (this.isAltGrOn()) {
+    if (this.altGrActive()) {
       // AltGr level: press the bare physical key, the guest layout picks the third-level character.
       this.keyPress.emit({ keysym: key.keysym, code: key.code, needsShift: false, needsCtrl, needsAlt, needsAltGr: true });
     } else if (shifted && key.shiftKeysym) {
       this.keyPress.emit({ keysym: key.shiftKeysym, code: key.code, needsShift: true, needsCtrl, needsAlt });
-    } else if (shifted && VirtualKeyboardComponent.LETTER_KEYSYMS.has(key.keysym)) {
-      // Uppercase letter: keysym is lowercase + 0x20 offset removed
-      this.keyPress.emit({ keysym: key.keysym - 0x20, code: key.code, needsShift: true, needsCtrl, needsAlt });
     } else {
       this.keyPress.emit({ keysym: key.keysym, code: key.code, needsShift: false, needsCtrl, needsAlt });
     }
@@ -149,8 +141,7 @@ export class VirtualKeyboardComponent {
     if (key.keysym === 0xffe5) return this.capsLock();
     if (key.keysym === VirtualKeyboardComponent.XK_CTRL_L) return this.ctrlActive();
     if (this.isAltGrKey(key)) return this.altGrActive();
-    if (key.keysym === VirtualKeyboardComponent.XK_ALT_L || key.keysym === VirtualKeyboardComponent.XK_ALT_R)
-      return this.altActive();
+    if (key.keysym === VirtualKeyboardComponent.XK_ALT_L) return this.altActive();
     return false;
   }
 }
