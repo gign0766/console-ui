@@ -59,19 +59,31 @@
       @if (networkList.length > 0) {
         <div cdkDropList class="d-flex flex-column gap-3" (cdkDropListDropped)="drop($event)" [formGroup]="formIps">
           @for (network of networkList; track network.eid) {
-            <div class="d-flex flex-column justify-content-center" cdkDrag>
-              <div class="d-flex flex-grow align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-column justify-content-center" cdkDrag [formGroupName]="network.id">
+              <div class="d-flex flex-grow align-items-center justify-content-between gap-3 flex-wrap">
                 <h4 class="label">
-                  <span>
-                    Interface {{ $index }} - {{ network.productName || network.eid }}
-                    @if (network.subnet?.isShared) {
-                      <i>- Shared</i>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span>
+                      Interface {{ $index }} - {{ network.productName || network.eid }}
+                      @if (network.subnet?.isShared) {
+                        <i>- Shared</i>
+                      }
+                    </span>
+                    @if (isPrimaryInterfaceDisabled(network.id)) {
+                      <span class="warning-badge">
+                        <mat-icon class="warning-badge__icon">warning</mat-icon>
+                        Primary interface disabled
+                      </span>
                     }
-                  </span>
-                  <br />
+                  </div>
                   <span> ({{ network.subnet?.spec?.cidrBlock }}) </span>
                 </h4>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                  <mat-slide-toggle
+                    formControlName="enabled"
+                    (change)="onToggleEnabled($index, network.id, $event)">
+                    Link State: {{ isInterfaceEnabled(network.id) ? 'Up' : 'Down' }}
+                  </mat-slide-toggle>
                   <button class="color-primary" mat-icon-button (click)="removeItemByIndex($index)">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -79,7 +91,7 @@
                 </div>
               </div>
               <div class="d-flex align-items-center justify-content-between gap-3">
-                <div class="align-items-start d-flex flex-grow gap-3" [formGroupName]="network.id">
+                <div class="align-items-start d-flex flex-grow gap-3">
                   @let protocol = network.subnet?.spec?.protocol || '';
                   @let cidr = network.subnet?.spec?.cidrBlock || '';
                   @let v4Cidr = cidrForVersion(cidr, 4);

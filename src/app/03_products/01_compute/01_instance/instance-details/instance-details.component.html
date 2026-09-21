@@ -173,24 +173,81 @@
             @let networks =
               instance.vmi?.spec?.networks ? instance.vmi!.spec.networks : instance.vm?.spec?.template?.spec?.networks;
 
-            @for (network of networks; track $index) {
+            @for (network of networks; track network.name ?? $index) {
+              @let vmInterface = getVmInterface(network.name, $index);
+              @let vmiInterface = getVmiInterface(network.name, $index);
               <div class="product-details__card sg-r2 sg-c2">
                 @let subnet = networkSubnetsMap().get(network.name);
-                <div class="d-flex align-items-center">
-                  <h3>{{ network.name }}</h3>
-                  <span class="ml-2"> {{ subnet ? '(linked to a subnet)' : '' }} </span>
-                  @if (subnet) {
-                    <a
-                      class="ml-1 color-primary"
-                      matIconButton
-                      [routerLink]="['/products', 'network', 'subnet', 'details', az(), subnet.eid]"
-                      aria-label="Go to subnet"
-                      target="_blank">
-                      <mat-icon> open_in_new</mat-icon>
-                    </a>
-                  }
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h3>{{ network.name }}</h3>
+                    <span class="ml-2"> {{ subnet ? '(linked to a subnet)' : '' }} </span>
+                    @if (subnet) {
+                      <a
+                        class="ml-1 color-primary"
+                        matIconButton
+                        [routerLink]="['/products', 'network', 'subnet', 'details', az(), subnet.eid]"
+                        aria-label="Go to subnet"
+                        target="_blank">
+                        <mat-icon> open_in_new</mat-icon>
+                      </a>
+                    }
+                    @if (isPrimaryInterfaceDisabled($index, vmInterface)) {
+                      <span class="warning-badge">
+                        <mat-icon class="warning-badge__icon">warning</mat-icon>
+                        Primary interface disabled
+                      </span>
+                    }
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    @if (isLinkStateSyncing(network.name, vmInterface, vmiInterface)) {
+                      <mat-chip-set aria-label="updating link state">
+                        <mat-chip class="status-chip--warning" disabled="true">
+                          <div class="d-flex align-items-center gap-1">
+                            <mat-progress-spinner mode="indeterminate" diameter="14" />
+                            <span>Updating link state...</span>
+                          </div>
+                        </mat-chip>
+                      </mat-chip-set>
+                    }
+                    <mat-slide-toggle
+                      [checked]="isInterfaceDesiredUp(vmInterface)"
+                      [disabled]="!canToggleLinkState() || isUpdatingLinkState(network.name)"
+                      (change)="toggleInterfaceLink(network.name, $event.checked, $event)"
+                      [aria-label]="'Toggle ' + network.name + ' link state'">
+                      {{ isInterfaceDesiredUp(vmInterface) ? 'Up' : 'Down' }}
+                    </mat-slide-toggle>
+                  </div>
                 </div>
-                <div class="pl-2 d-flex flex-column">
+                <div class="pl-2 d-flex flex-column gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <strong>Desired State: </strong>
+                    <mat-chip-set aria-label="desired link state">
+                      <mat-chip
+                        [class]="isInterfaceDesiredUp(vmInterface) ? 'status-chip--ready' : 'status-chip--stopped'"
+                        disabled="true">
+                        {{ isInterfaceDesiredUp(vmInterface) ? 'Up' : 'Down' }}
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+
+                  <div class="d-flex align-items-center gap-2">
+                    <strong>Carrier State: </strong>
+                    <mat-chip-set aria-label="operational carrier state">
+                      @if (isVmRunning()) {
+                        <mat-chip
+                          [class]="vmiInterface?.linkState === 'up' ? 'status-chip--ready' : 'status-chip--stopped'"
+                          disabled="true">
+                          {{ getOperationalCarrierState(vmiInterface) }}
+                        </mat-chip>
+                      } @else {
+                        <mat-chip class="status-chip--stopped" disabled="true">
+                          Instance stopped
+                        </mat-chip>
+                      }
+                    </mat-chip-set>
+                  </div>
+
                   @if (subnet) {
                     <div class="d-flex flex-column gap-2">
                       <spx-span-copy key="Id" [value]="subnet.id" />
@@ -199,18 +256,26 @@
                       <span> <strong>CIDR Block:</strong> {{ subnet.subnet?.spec?.cidrBlock }} </span>
                       <span>
                         <strong>Assigned IP: </strong>
-                        {{ instance.vmi?.status?.interfaces?.[$index]?.ipAddresses?.join(',') }}
+                        {{ vmiInterface?.ipAddresses?.join(',') }}
                       </span>
 
                       <span>
                         <strong>Mount type: </strong>
-                        {{ instance.vm?.spec?.template?.spec?.domain?.devices?.interfaces?.[$index]?.model || 'auto' }}
+                        {{ vmInterface?.model || 'auto' }}
                       </span>
                     </div>
                   } @else {
                     <div class="product-details__grid">
                       <span class="product-details__left-col"> Network Name: {{ network.multus?.networkName }} </span>
                     </div>
+                    <span>
+                      <strong>Assigned IP: </strong>
+                      {{ vmiInterface?.ipAddresses?.join(',') }}
+                    </span>
+                    <span>
+                      <strong>Mount type: </strong>
+                      {{ vmInterface?.model || 'auto' }}
+                    </span>
                   }
                 </div>
               </div>

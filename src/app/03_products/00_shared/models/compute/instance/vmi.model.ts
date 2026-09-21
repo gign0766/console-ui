@@ -59,6 +59,7 @@ export interface CDRomBus {
 export interface InterfaceElement {
   model?: string;
   name: string;
+  state?: 'up' | 'down';
 }
 
 export interface Volume {
@@ -141,13 +142,14 @@ interface Network {
   };
 }
 
-interface VirtualMachineInstanceNetworkInterface {
+export interface VirtualMachineInstanceNetworkInterface {
   // Hardware address of a Virtual Machine interface
   mac?: string;
   // Name of the interface, corresponds to name of the network assigned to the interface
   name?: string;
   // List of all IP addresses of a Virtual Machine interface
   ipAddresses?: string[];
+  linkState?: 'up' | 'down';
 }
 
 interface AccessCredential {

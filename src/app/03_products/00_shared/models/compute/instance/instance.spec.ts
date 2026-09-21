@@ -3,8 +3,10 @@ import {
   BUS_LIST,
   BUS_SATA,
   BUS_VIRTIO,
+  CreateInstanceNetwork,
   getBusName,
 } from './instance';
+import { InterfaceElement, VirtualMachineInstanceNetworkInterface } from './vmi.model';
 
 describe('Instance BUS constants and helpers', () => {
   describe('BUS constants', () => {
@@ -42,6 +44,79 @@ describe('Instance BUS constants and helpers', () => {
       expect(getBusName(undefined)).toBe('');
       expect(getBusName(null)).toBe('');
       expect(getBusName('')).toBe('');
+    });
+  });
+
+  describe('CreateInstanceNetwork model', () => {
+    it('should accept enabled: true', () => {
+      const net: CreateInstanceNetwork = {
+        order: 0,
+        subnetEId: 'subnet-123',
+        model: 'virtio',
+        enabled: true,
+        ipv4: '10.0.0.5',
+      };
+      expect(net.enabled).toBeTrue();
+    });
+
+    it('should accept enabled: false', () => {
+      const net: CreateInstanceNetwork = {
+        order: 1,
+        subnetEId: 'subnet-456',
+        model: 'auto',
+        enabled: false,
+      };
+      expect(net.enabled).toBeFalse();
+    });
+
+    it('should allow omitting enabled for backward compatibility', () => {
+      const net: CreateInstanceNetwork = {
+        order: 0,
+        subnetEId: 'subnet-789',
+      };
+      expect(net.enabled).toBeUndefined();
+    });
+
+    it('should correctly serialize and deserialize enabled field in JSON', () => {
+      const netTrue: CreateInstanceNetwork = { order: 0, subnetEId: 'sub-1', enabled: true };
+      const netFalse: CreateInstanceNetwork = { order: 1, subnetEId: 'sub-2', enabled: false };
+      const netOmitted: CreateInstanceNetwork = { order: 2, subnetEId: 'sub-3' };
+
+      const parsedTrue = JSON.parse(JSON.stringify(netTrue)) as CreateInstanceNetwork;
+      const parsedFalse = JSON.parse(JSON.stringify(netFalse)) as CreateInstanceNetwork;
+      const parsedOmitted = JSON.parse(JSON.stringify(netOmitted)) as CreateInstanceNetwork;
+
+      expect(parsedTrue.enabled).toBeTrue();
+      expect(parsedFalse.enabled).toBeFalse();
+      expect(parsedOmitted.enabled).toBeUndefined();
+      expect('enabled' in parsedOmitted).toBeFalse();
+    });
+  });
+
+  describe('VM and VMI interface state types', () => {
+    it('should type InterfaceElement state as up or down', () => {
+      const ifaceUp: InterfaceElement = { name: 'interface-0', state: 'up' };
+      const ifaceDown: InterfaceElement = { name: 'interface-1', state: 'down' };
+      const ifaceDefault: InterfaceElement = { name: 'interface-2' };
+
+      expect(ifaceUp.state).toBe('up');
+      expect(ifaceDown.state).toBe('down');
+      expect(ifaceDefault.state).toBeUndefined();
+    });
+
+    it('should type VirtualMachineInstanceNetworkInterface linkState as up or down', () => {
+      const vmiIfaceUp: VirtualMachineInstanceNetworkInterface = {
+        name: 'interface-0',
+        mac: '52:54:00:12:34:56',
+        linkState: 'up',
+      };
+      const vmiIfaceDown: VirtualMachineInstanceNetworkInterface = {
+        name: 'interface-1',
+        linkState: 'down',
+      };
+
+      expect(vmiIfaceUp.linkState).toBe('up');
+      expect(vmiIfaceDown.linkState).toBe('down');
     });
   });
 });
