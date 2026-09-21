@@ -14,9 +14,6 @@ export class VirtualKeyboardComponent {
   // Keyboard layout configured in the guest OS: labels show what each key position types there.
   layout = model(DEFAULT_GUEST_LAYOUT);
 
-  // Asks the host to type the clipboard text into the VM with the selected layout.
-  pasteRequest = output<void>();
-
   readonly layouts = GUEST_LAYOUTS;
   layoutLabel = computed(() => GUEST_LAYOUTS.find(l => l.id === this.layout())?.label ?? '');
 

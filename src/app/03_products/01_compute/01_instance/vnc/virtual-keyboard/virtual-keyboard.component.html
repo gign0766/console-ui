@@ -1,10 +1,6 @@
 <div class="virtual-keyboard">
   <div class="virtual-keyboard__content">
   <div class="virtual-keyboard__toolbar">
-    <button matButton title="Type the clipboard text into the VM using the selected keyboard layout" (click)="pasteRequest.emit()">
-      <mat-icon>content_paste</mat-icon>
-      Paste from clipboard
-    </button>
     <button
       matButton
       [matMenuTriggerFor]="layoutMenu"
