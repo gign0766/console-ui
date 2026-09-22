@@ -427,6 +427,30 @@ describe('InstanceNetworkCreateComponent', () => {
     expect(errorEl.textContent).toContain('Invalid MAC address');
   });
 
+  it('should show validation error when hyphen-delimited MAC is typed', async () => {
+    let lastValid: boolean | undefined;
+    component.validChange.subscribe(valid => (lastValid = valid));
+
+    fixture.componentRef.setInput('initList', [
+      { order: 0, subnetEId: 'subnet-eid-1' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const macCtrl = component.formIps.get(['subnet-1', 'macAddress']);
+    macCtrl?.setValue('52-54-00-11-22-33');
+    macCtrl?.markAsTouched();
+    fixture.detectChanges();
+
+    expect(macCtrl?.valid).toBeFalse();
+    expect(macCtrl?.errors?.['mac']).toBeTrue();
+    expect(lastValid).toBeFalse();
+
+    const errorEl = fixture.nativeElement.querySelector('mat-error');
+    expect(errorEl).toBeTruthy();
+    expect(errorEl.textContent).toContain('Invalid MAC address');
+  });
+
   it('should render network item with responsive layout classes and contain all fields inside network-item__fields', async () => {
     // Subnet 2 has Dual protocol (IPv4 + IPv6 + MAC + Model = 4 fields)
     fixture.componentRef.setInput('initList', [

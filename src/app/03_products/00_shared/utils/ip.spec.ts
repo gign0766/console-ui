@@ -56,7 +56,7 @@ describe('CidrNetworkAddress', () => {
 describe('IsValidMac', () => {
   const cases: { name: string; value: string; expected: boolean }[] = [
     { name: 'valid colon-delimited MAC', value: '52:54:00:11:22:33', expected: true },
-    { name: 'valid hyphen-delimited MAC', value: '52-54-00-11-22-33', expected: true },
+    { name: 'hyphen-delimited MAC rejected', value: '52-54-00-11-22-33', expected: false },
     { name: 'valid lowercase MAC', value: '52:54:00:ab:cd:ef', expected: true },
     { name: 'valid uppercase MAC', value: '52:54:00:AB:CD:EF', expected: true },
     { name: 'too few octets', value: '52:54:00:11:22', expected: false },

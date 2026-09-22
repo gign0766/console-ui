@@ -67,7 +67,7 @@ describe('macValidator', () => {
   const cases: { name: string; value: string; expected: ValidationErrors | null }[] = [
     { name: 'empty value passes (required owns emptiness)', value: '', expected: null },
     { name: 'valid colon-delimited MAC', value: '52:54:00:11:22:33', expected: null },
-    { name: 'valid hyphen-delimited MAC', value: '52-54-00-11-22-33', expected: null },
+    { name: 'hyphen-delimited MAC rejected', value: '52-54-00-11-22-33', expected: { mac: true } },
     { name: 'valid lowercase MAC', value: '52:54:00:ab:cd:ef', expected: null },
     { name: 'valid uppercase MAC', value: '52:54:00:AB:CD:EF', expected: null },
     { name: 'invalid short MAC', value: '52:54:00:11:22', expected: { mac: true } },
