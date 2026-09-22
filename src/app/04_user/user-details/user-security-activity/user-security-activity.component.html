@@ -1,0 +1,27 @@
+<div class="user-security">
+  <spx-audit-log-filters
+    mode="user"
+    [filter]="filter()"
+    [eventGroups]="eventGroups()"
+    (filterChange)="updateFilter($event)"
+    (refresh)="reloadData()"></spx-audit-log-filters>
+
+  <spx-audit-log-table
+    [page]="page()"
+    [loading]="events.isLoading()"
+    [error]="events.status() === 'error'"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [showUser]="false"
+    [showProject]="false"
+    [eventTypes]="eventTypeList()"
+    (pageChange)="updatePage($event)"
+    (rowClick)="openEvent($event)">
+    @if (retention.hasValue()) {
+      <span auditFootnote class="user-security__retention">
+        <mat-icon>history</mat-icon>
+        Activity is kept for {{ retention.value().retentionDays }} days.
+      </span>
+    }
+  </spx-audit-log-table>
+</div>

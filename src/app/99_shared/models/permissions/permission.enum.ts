@@ -6,6 +6,8 @@ export enum PermissionsEnum {
   OrganizationBillingRead = 'OrganizationBillingRead',
   OrganizationBillingWrite = 'OrganizationBillingWrite',
   OrganizationProjectManagement = 'OrganizationProjectManagement',
+  OrganizationAuditLogRead = 'OrganizationAuditLogRead',
+  OrganizationAuditLogWrite = 'OrganizationAuditLogWrite',
 
   ProjectInstanceRead = 'ProjectInstanceRead',
   ProjectInstanceTerminal = 'ProjectInstanceTerminal',

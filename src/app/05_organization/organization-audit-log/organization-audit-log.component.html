@@ -1,0 +1,40 @@
+<div class="org-audit-log main-content">
+  <div class="org-audit-log__header">
+    <spx-content-header title="Audit log"></spx-content-header>
+
+    @if (retention.hasValue() && retention.value(); as ret) {
+      <div class="org-audit-log__retention">
+        <span matTooltip="Events older than the retention are permanently removed">
+          Retention: <b>{{ ret.retentionDays }} days</b>
+          @if (ret.isDefault) {
+            <span class="org-audit-log__retention-hint"> (default)</span>
+          }
+        </span>
+        @if (canAuditLogWrite()) {
+          <button matButton="outlined" (click)="editRetention()">
+            <mat-icon class="symbols-fill">edit</mat-icon> Edit
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <spx-audit-log-filters
+    class="my-3"
+    [filter]="filter()"
+    [projects]="projects()"
+    [eventGroups]="eventGroups()"
+    (filterChange)="updateFilter($event)"
+    (refresh)="reloadData()"></spx-audit-log-filters>
+
+  <spx-audit-log-table
+    [page]="page()"
+    [loading]="events.isLoading()"
+    [error]="events.status() === 'error'"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [projects]="projects()"
+    [eventTypes]="eventTypeList()"
+    (pageChange)="updatePage($event)"
+    (rowClick)="openEvent($event)"></spx-audit-log-table>
+</div>

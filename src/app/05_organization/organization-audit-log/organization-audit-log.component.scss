@@ -1,0 +1,24 @@
+.org-audit-log {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
+  &__retention {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font: var(--mat-sys-body-large);
+  }
+
+  &__retention-hint {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  spx-audit-log-filters {
+    display: block;
+  }
+}

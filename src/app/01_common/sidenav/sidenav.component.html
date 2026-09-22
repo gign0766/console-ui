@@ -61,6 +61,16 @@
     <div class="sidenav__menu-hr"></div>
 
     <div class="menu__settings-content">
+      @if (canAuditLogRead()) {
+        <a
+          mat-button
+          class="sidenav__menu-link-btn"
+          [routerLink]="['/organization', 'audit-log']"
+          routerLinkActive="sidenav__menu-link-btn--active">
+          <mat-icon class="mat-icon--normal-size">manage_search</mat-icon>
+          Audit log
+        </a>
+      }
       <a
         mat-button
         class="sidenav__menu-link-btn"
