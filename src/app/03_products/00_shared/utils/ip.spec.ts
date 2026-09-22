@@ -1,4 +1,4 @@
-import { CidrForVersion, CidrNetworkAddress, IsValidIPv4 } from './ip';
+import { CidrForVersion, CidrNetworkAddress, GenerateRandomMac, IsValidIPv4, IsValidMac } from './ip';
 
 describe('IsValidIPv4', () => {
   const cases: { name: string; value: string; expected: boolean }[] = [
@@ -50,5 +50,46 @@ describe('CidrNetworkAddress', () => {
     it(`should return ${expected} for ${name}`, () => {
       expect(CidrNetworkAddress(cidr)).toBe(expected);
     });
+  });
+});
+
+describe('IsValidMac', () => {
+  const cases: { name: string; value: string; expected: boolean }[] = [
+    { name: 'valid colon-delimited MAC', value: '52:54:00:11:22:33', expected: true },
+    { name: 'valid hyphen-delimited MAC', value: '52-54-00-11-22-33', expected: true },
+    { name: 'valid lowercase MAC', value: '52:54:00:ab:cd:ef', expected: true },
+    { name: 'valid uppercase MAC', value: '52:54:00:AB:CD:EF', expected: true },
+    { name: 'too few octets', value: '52:54:00:11:22', expected: false },
+    { name: 'too many octets', value: '52:54:00:11:22:33:44', expected: false },
+    { name: 'non-hex characters', value: '52:54:00:11:22:zz', expected: false },
+    { name: 'arbitrary string', value: 'not-a-mac', expected: false },
+    { name: 'empty string', value: '', expected: false },
+  ];
+
+  cases.forEach(({ name, value, expected }) => {
+    it(`should return ${expected} for ${name} ("${value}")`, () => {
+      expect(IsValidMac(value)).toBe(expected);
+    });
+  });
+});
+
+describe('GenerateRandomMac', () => {
+  it('should generate a valid MAC address with default prefix', () => {
+    const mac = GenerateRandomMac();
+    expect(IsValidMac(mac)).toBeTrue();
+    expect(mac.startsWith('52:54:00:')).toBeTrue();
+    expect(mac.split(':').length).toBe(6);
+  });
+
+  it('should support custom prefix', () => {
+    const mac = GenerateRandomMac('00:16:3e');
+    expect(IsValidMac(mac)).toBeTrue();
+    expect(mac.startsWith('00:16:3e:')).toBeTrue();
+  });
+
+  it('should generate different MAC addresses on consecutive calls', () => {
+    const mac1 = GenerateRandomMac();
+    const mac2 = GenerateRandomMac();
+    expect(mac1).not.toEqual(mac2);
   });
 });

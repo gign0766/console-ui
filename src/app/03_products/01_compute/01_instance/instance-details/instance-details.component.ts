@@ -1,20 +1,17 @@
 import { Clipboard } from '@angular/cdk/clipboard';
-import { Component, computed, DestroyRef, inject, OnDestroy, signal } from '@angular/core';
-import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, inject, signal } from '@angular/core';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TabsBase } from '@products/00_shared/components/tabs-base/tab-base.component';
-import { InterfaceElement, VirtualMachineInstanceNetworkInterface } from '@products/00_shared/models/compute/instance/vmi.model';
 import { ProductInstance, ProductSSH, ProductSubnet } from '@products/00_shared/models/product.model';
 import { InstanceSnapshotService } from '@products/00_shared/services/instance-snapshot.service';
 import { InstanceService } from '@products/00_shared/services/instance.service';
@@ -25,19 +22,18 @@ import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ButtonWithDropdownComponent } from '@shared/components/button-with-dropdown/button-with-dropdown.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
-import { ConfirmDialog } from '@shared/dialogs/confirm-dialog/confirm-dialog.component';
-import { GridDirective } from '@shared/directives/grid.directive';
 import { nonBlockingErrorHandler } from '@shared/http/customHandler';
 import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
 import { PermissionsEnum } from '@shared/models/permissions/permission.enum';
 import { PermissionService } from '@shared/services/permission.service';
 import { StateService } from '@shared/services/state.service';
-import { forkJoin, Observable, of, Subscription, take, timer } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { InstanceDetailsAdvancedComponent } from './instance-details-advanced/instance-details-advanced.component';
 import { InstanceDetailsGeneralComponent } from './instance-details-general/instance-details-general.component';
+import { InstanceDetailsNetworkComponent } from './instance-details-network/instance-details-network.component';
 import { InstanceDetailsStorageComponent } from './instance-details-storage/instance-details-storage.component';
-import { buildUpdatePayloadFromInstance, extractNetworksFromInstance, InstanceActions } from '../instance-actions.utils';
+import { InstanceActions } from '../instance-actions.utils';
 import { environment } from '@env/environment';
 
 @Component({
@@ -50,22 +46,20 @@ import { environment } from '@env/environment';
     MatMenuModule,
     MatDividerModule,
     MatTableModule,
-    MatSlideToggleModule,
-    MatProgressSpinnerModule,
     ContentHeaderComponent,
     InstanceDetailsAdvancedComponent,
     InstanceDetailsGeneralComponent,
+    InstanceDetailsNetworkComponent,
     InstanceDetailsStorageComponent,
     RouterLink,
     BannerComponent,
-    GridDirective,
     SpanCopyComponent,
     ButtonWithDropdownComponent,
   ],
   templateUrl: './instance-details.component.html',
   styleUrl: './instance-details.component.scss',
 })
-export class InstanceDetailsComponent extends TabsBase implements OnDestroy {
+export class InstanceDetailsComponent extends TabsBase {
   protected stateSvc = inject(StateService);
   protected permissionSvc = inject(PermissionService);
   protected instanceSvc = inject(InstanceService);
@@ -147,9 +141,6 @@ export class InstanceDetailsComponent extends TabsBase implements OnDestroy {
   });
 
   private needReload = signal(0);
-  private readonly destroyRef = inject(DestroyRef);
-  private pollSubscriptions = new Map<string, Subscription>();
-  syncingInterfaces = signal<Set<string>>(new Set());
 
   constructor() {
     super();
@@ -295,232 +286,5 @@ export class InstanceDetailsComponent extends TabsBase implements OnDestroy {
         this.router.navigate(['/products', 'compute', 'instance']);
       }
     });
-  }
-
-  getVmInterface(networkName: string, index?: number): InterfaceElement | undefined {
-    const instance = this.instanceProduct.value();
-    const interfaces =
-      instance?.vm?.spec?.template?.spec?.domain?.devices?.interfaces ??
-      instance?.vmi?.spec?.domain?.devices?.interfaces;
-    if (!interfaces) return undefined;
-    return interfaces.find(i => i.name === networkName) ?? (index !== undefined ? interfaces[index] : undefined);
-  }
-
-  getVmiInterface(networkName: string, index?: number): VirtualMachineInstanceNetworkInterface | undefined {
-    const interfaces = this.instanceProduct.value()?.vmi?.status?.interfaces;
-    if (!interfaces) return undefined;
-    return interfaces.find(i => i.name === networkName) ?? (index !== undefined ? interfaces[index] : undefined);
-  }
-
-  isVmRunning(): boolean {
-    const instance = this.instanceProduct.value();
-    if (!instance?.vmi) return false;
-    const phase = instance.vmi.status?.phase;
-    return !phase || (phase !== 'Succeeded' && phase !== 'Failed');
-  }
-
-  isInterfaceDesiredUp(vmInterface?: InterfaceElement): boolean {
-    if (!vmInterface) return true;
-    return vmInterface.state !== 'down';
-  }
-
-  getOperationalCarrierState(vmiInterface?: VirtualMachineInstanceNetworkInterface): string {
-    if (!this.isVmRunning()) {
-      return 'Instance stopped';
-    }
-    if (vmiInterface?.linkState === 'down') {
-      return 'Link Down';
-    }
-    if (vmiInterface?.linkState === 'up') {
-      return 'Link Up';
-    }
-    return 'Unknown';
-  }
-
-  isPrimaryInterfaceDisabled(index: number, vmInterface?: InterfaceElement): boolean {
-    return index === 0 && !this.isInterfaceDesiredUp(vmInterface);
-  }
-
-  isLinkStateSyncing(
-    networkName: string,
-    vmInterface?: InterfaceElement,
-    vmiInterface?: VirtualMachineInstanceNetworkInterface
-  ): boolean {
-    if (this.syncingInterfaces().has(networkName)) {
-      return true;
-    }
-    if (!this.isVmRunning()) {
-      return false;
-    }
-    if (!vmiInterface || !vmiInterface.linkState) {
-      return false;
-    }
-    const desired = this.isInterfaceDesiredUp(vmInterface) ? 'up' : 'down';
-    return desired !== vmiInterface.linkState;
-  }
-
-  canToggleLinkState(): boolean {
-    if (!this.canProjectInstanceWrite()) {
-      return false;
-    }
-    const instance = this.instanceProduct.value();
-    if (!instance) {
-      return false;
-    }
-    if (instance.gitops === 'true') {
-      return false;
-    }
-    if (this.isClusterInstance()) {
-      return false;
-    }
-    return true;
-  }
-
-  isUpdatingLinkState(networkName: string): boolean {
-    return this.syncingInterfaces().has(networkName);
-  }
-
-  toggleInterfaceLink(interfaceName: string, enable: boolean, event?: MatSlideToggleChange): void {
-    const instance = this.instanceProduct.value();
-    const projectId = this.stateSvc.project()?.id ?? '';
-    const subnetEid = instance ? this.getSubnetEidForInterface(instance, interfaceName, projectId) : undefined;
-    const targetNetwork = subnetEid
-      ? extractNetworksFromInstance(instance!, projectId).find(network => network.subnetEId === subnetEid)
-      : undefined;
-    const isPrimary = targetNetwork?.order === 0;
-
-    if (isPrimary && !enable) {
-      const ref = this.dialog.open(ConfirmDialog, {
-        data: {
-          title: 'Disable primary interface?',
-          content:
-            'Disabling the primary interface will disconnect default gateway connectivity. Remote access may be interrupted. Are you sure you want to proceed?',
-          confirmBtn: 'Disable',
-          cancelBtn: 'Cancel',
-        },
-      });
-
-      ref.afterClosed().subscribe(confirmed => {
-        if (confirmed) {
-          this.executeLinkStateUpdate(interfaceName, subnetEid, enable);
-        } else {
-          if (event?.source) {
-            event.source.checked = true;
-          }
-        }
-      });
-    } else {
-      this.executeLinkStateUpdate(interfaceName, subnetEid, enable);
-    }
-  }
-
-  private getSubnetEidForInterface(instance: ProductInstance, interfaceName: string, projectId: string): string | undefined {
-    const networks = instance.vm?.spec?.template?.spec?.networks ?? instance.vmi?.spec?.networks ?? [];
-    const multusName = networks.find(network => network.name === interfaceName)?.multus?.networkName;
-    if (!multusName) {
-      return undefined;
-    }
-
-    const projectPrefix = projectId ? `spx-${projectId}/` : '';
-    if (projectPrefix && multusName.startsWith(projectPrefix)) {
-      return multusName.slice(projectPrefix.length);
-    }
-    return multusName.includes('/') ? multusName.split('/')[1] : multusName;
-  }
-
-  private executeLinkStateUpdate(interfaceName: string, subnetEid: string | undefined, enable: boolean): void {
-    const instance = this.instanceProduct.value();
-    if (!instance || !subnetEid) {
-      return;
-    }
-
-    const wasVmRunning = this.isVmRunning();
-    const projectId = this.stateSvc.project()?.id ?? '';
-    const orgId = this.stateSvc.organization()?.id ?? '';
-    const az = this.az();
-    const effectiveId = this.routeParams()?.['id'] ?? instance.eid;
-
-    this.syncingInterfaces.update(set => new Set(set).add(interfaceName));
-
-    const currentNetworks = extractNetworksFromInstance(instance, projectId);
-    if (!currentNetworks.some(network => network.subnetEId === subnetEid)) {
-      this.stopPolling(interfaceName);
-      return;
-    }
-
-    const updatedNetworks = currentNetworks.map(net => {
-      if (net.subnetEId === subnetEid) {
-        return { ...net, enabled: enable };
-      }
-      return net;
-    });
-
-    const updatePayload = buildUpdatePayloadFromInstance(instance, updatedNetworks);
-
-    this.instanceSvc.update(orgId, projectId, az, effectiveId, updatePayload).subscribe({
-      next: () => {
-        this.snackbar.open('Network interface link state updated', undefined, {
-          duration: 3000,
-          horizontalPosition: 'end',
-        });
-        if (wasVmRunning) {
-          this.startPollingLinkState(interfaceName, enable);
-        } else {
-          this.stopPolling(interfaceName);
-        }
-        this.reload();
-      },
-      error: () => {
-        this.stopPolling(interfaceName);
-      },
-    });
-  }
-
-  private startPollingLinkState(interfaceName: string, targetState: boolean): void {
-    if (this.pollSubscriptions.has(interfaceName)) {
-      this.pollSubscriptions.get(interfaceName)!.unsubscribe();
-      this.pollSubscriptions.delete(interfaceName);
-    }
-
-    let attempts = 0;
-    const maxAttempts = 5;
-    const targetLinkState = targetState ? 'up' : 'down';
-
-    const pollSub = timer(1500, 1500)
-      .pipe(take(maxAttempts), takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          attempts++;
-          const currentInstance = this.instanceProduct.value();
-          const vmiIface = currentInstance?.vmi?.status?.interfaces?.find(i => i.name === interfaceName);
-          if (vmiIface?.linkState === targetLinkState || attempts >= maxAttempts) {
-            this.stopPolling(interfaceName);
-          } else {
-            this.reload();
-          }
-        },
-        complete: () => {
-          this.stopPolling(interfaceName);
-        },
-      });
-
-    this.pollSubscriptions.set(interfaceName, pollSub);
-  }
-
-  private stopPolling(interfaceName: string): void {
-    if (this.pollSubscriptions.has(interfaceName)) {
-      this.pollSubscriptions.get(interfaceName)!.unsubscribe();
-      this.pollSubscriptions.delete(interfaceName);
-    }
-    this.syncingInterfaces.update(set => {
-      const next = new Set(set);
-      next.delete(interfaceName);
-      return next;
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.pollSubscriptions.forEach(sub => sub.unsubscribe());
-    this.pollSubscriptions.clear();
   }
 }

@@ -91,17 +91,53 @@ describe('Instance BUS constants and helpers', () => {
       expect(parsedOmitted.enabled).toBeUndefined();
       expect('enabled' in parsedOmitted).toBeFalse();
     });
+
+    it('should accept macAddress', () => {
+      const net: CreateInstanceNetwork = {
+        order: 0,
+        subnetEId: 'subnet-123',
+        macAddress: '52:54:00:11:22:33',
+      };
+      expect(net.macAddress).toBe('52:54:00:11:22:33');
+    });
+
+    it('should allow omitting macAddress for backward compatibility', () => {
+      const net: CreateInstanceNetwork = {
+        order: 0,
+        subnetEId: 'subnet-789',
+      };
+      expect(net.macAddress).toBeUndefined();
+    });
+
+    it('should correctly serialize and deserialize macAddress in JSON', () => {
+      const netWithMac: CreateInstanceNetwork = {
+        order: 0,
+        subnetEId: 'sub-1',
+        macAddress: '52:54:00:aa:bb:cc',
+      };
+      const netWithoutMac: CreateInstanceNetwork = { order: 1, subnetEId: 'sub-2' };
+
+      const parsedWith = JSON.parse(JSON.stringify(netWithMac)) as CreateInstanceNetwork;
+      const parsedWithout = JSON.parse(JSON.stringify(netWithoutMac)) as CreateInstanceNetwork;
+
+      expect(parsedWith.macAddress).toBe('52:54:00:aa:bb:cc');
+      expect(parsedWithout.macAddress).toBeUndefined();
+      expect('macAddress' in parsedWithout).toBeFalse();
+    });
   });
 
   describe('VM and VMI interface state types', () => {
-    it('should type InterfaceElement state as up or down', () => {
-      const ifaceUp: InterfaceElement = { name: 'interface-0', state: 'up' };
+    it('should type InterfaceElement with state and macAddress', () => {
+      const ifaceUp: InterfaceElement = { name: 'interface-0', state: 'up', macAddress: '52:54:00:11:22:33' };
       const ifaceDown: InterfaceElement = { name: 'interface-1', state: 'down' };
       const ifaceDefault: InterfaceElement = { name: 'interface-2' };
 
       expect(ifaceUp.state).toBe('up');
+      expect(ifaceUp.macAddress).toBe('52:54:00:11:22:33');
       expect(ifaceDown.state).toBe('down');
+      expect(ifaceDown.macAddress).toBeUndefined();
       expect(ifaceDefault.state).toBeUndefined();
+      expect(ifaceDefault.macAddress).toBeUndefined();
     });
 
     it('should type VirtualMachineInstanceNetworkInterface linkState as up or down', () => {

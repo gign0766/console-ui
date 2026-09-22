@@ -2,6 +2,32 @@ const ipv4Regex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 const ipv6Regex =
   /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+
+// Check if a string is a valid IEEE 802 MAC address
+// Accepts colon or hyphen notation (e.g. 52:54:00:11:22:33 or 52-54-00-11-22-33)
+export function IsValidMac(mac: string): boolean {
+  return macRegex.test(mac);
+}
+
+// Generate a random unicast MAC address with standard QEMU/KVM prefix (52:54:00) by default
+export function GenerateRandomMac(prefix = '52:54:00'): string {
+  const cleanPrefix = prefix.replace(/-+/g, ':').toLowerCase();
+  const prefixParts = cleanPrefix ? cleanPrefix.split(':').filter(Boolean) : [];
+  const needed = 6 - prefixParts.length;
+  const randomParts: string[] = [];
+  for (let i = 0; i < needed; i++) {
+    const byte = Math.floor(Math.random() * 256);
+    if (prefixParts.length === 0 && i === 0) {
+      // Ensure locally administered unicast (bit 0 is 0, bit 1 is 1)
+      const unicastByte = (byte & 0xfe) | 0x02;
+      randomParts.push(unicastByte.toString(16).padStart(2, '0'));
+    } else {
+      randomParts.push(byte.toString(16).padStart(2, '0'));
+    }
+  }
+  return [...prefixParts, ...randomParts].join(':');
+}
 
 // Check if an ip is a valid IPv4 address
 // Return true if it's valid, false otherwise

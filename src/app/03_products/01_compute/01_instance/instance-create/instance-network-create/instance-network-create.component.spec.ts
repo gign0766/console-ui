@@ -358,4 +358,99 @@ describe('InstanceNetworkCreateComponent', () => {
     expect(component.isInterfaceEnabled('subnet-1')).toBeTrue();
     expect(emittedNetworks?.[0].enabled).toBeTrue();
   });
+
+  it('should initialize macAddress from initList', async () => {
+    let emittedNetworks: CreateInstanceNetwork[] | undefined;
+    component.networksChange.subscribe(networks => (emittedNetworks = networks));
+
+    fixture.componentRef.setInput('initList', [
+      { order: 0, subnetEId: 'subnet-eid-1', macAddress: '52:54:00:11:22:33' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.formIps.get(['subnet-1', 'macAddress'])?.value).toBe('52:54:00:11:22:33');
+    expect(component.staticMacMap.get('subnet-1')).toBe('52:54:00:11:22:33');
+    expect(emittedNetworks?.[0].macAddress).toBe('52:54:00:11:22:33');
+
+    const macInput = fixture.nativeElement.querySelector('input[formControlName="macAddress"]');
+    expect(macInput).toBeTruthy();
+    expect(macInput.value).toBe('52:54:00:11:22:33');
+  });
+
+  it('should generate and set random MAC when cycle button is clicked', async () => {
+    let emittedNetworks: CreateInstanceNetwork[] | undefined;
+    component.networksChange.subscribe(networks => (emittedNetworks = networks));
+
+    fixture.componentRef.setInput('initList', [
+      { order: 0, subnetEId: 'subnet-eid-1' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const scrambleBtn = fixture.nativeElement.querySelector('button[aria-label="Generate random MAC address"]');
+    expect(scrambleBtn).toBeTruthy();
+
+    scrambleBtn.click();
+    fixture.detectChanges();
+
+    const macCtrl = component.formIps.get(['subnet-1', 'macAddress']);
+    const generatedMac = macCtrl?.value;
+    expect(generatedMac).toBeTruthy();
+    expect(generatedMac).toMatch(/^52:54:00:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}$/);
+    expect(macCtrl?.dirty).toBeTrue();
+    expect(component.staticMacMap.get('subnet-1')).toBe(generatedMac);
+    expect(emittedNetworks?.[0].macAddress).toBe(generatedMac);
+  });
+
+  it('should show validation error when invalid MAC is typed', async () => {
+    let lastValid: boolean | undefined;
+    component.validChange.subscribe(valid => (lastValid = valid));
+
+    fixture.componentRef.setInput('initList', [
+      { order: 0, subnetEId: 'subnet-eid-1' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const macCtrl = component.formIps.get(['subnet-1', 'macAddress']);
+    macCtrl?.setValue('invalid-mac');
+    macCtrl?.markAsTouched();
+    fixture.detectChanges();
+
+    expect(macCtrl?.valid).toBeFalse();
+    expect(macCtrl?.errors?.['mac']).toBeTrue();
+    expect(lastValid).toBeFalse();
+
+    const errorEl = fixture.nativeElement.querySelector('mat-error');
+    expect(errorEl).toBeTruthy();
+    expect(errorEl.textContent).toContain('Invalid MAC address');
+  });
+
+  it('should render network item with responsive layout classes and contain all fields inside network-item__fields', async () => {
+    // Subnet 2 has Dual protocol (IPv4 + IPv6 + MAC + Model = 4 fields)
+    fixture.componentRef.setInput('initList', [
+      { order: 0, subnetEId: 'subnet-eid-2' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const networkItem = fixture.nativeElement.querySelector('.network-item');
+    expect(networkItem).toBeTruthy();
+
+    const header = networkItem.querySelector('.network-item__header');
+    expect(header).toBeTruthy();
+
+    const fieldsContainer = networkItem.querySelector('.network-item__fields');
+    expect(fieldsContainer).toBeTruthy();
+
+    // Dual stack subnet should have 4 fields inside fields container
+    const fields = fieldsContainer.querySelectorAll('.network-item__field');
+    expect(fields.length).toBe(4);
+
+    expect(fieldsContainer.querySelector('input[formControlName="v4"]')).toBeTruthy();
+    expect(fieldsContainer.querySelector('input[formControlName="v6"]')).toBeTruthy();
+    expect(fieldsContainer.querySelector('input[formControlName="macAddress"]')).toBeTruthy();
+    expect(fieldsContainer.querySelector('mat-select[formControlName="model"]')).toBeTruthy();
+  });
 });

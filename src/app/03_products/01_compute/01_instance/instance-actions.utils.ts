@@ -60,6 +60,7 @@ export function extractNetworksFromInstance(
     instance.vm?.spec?.template?.spec?.domain?.devices?.interfaces ??
     instance.vmi?.spec?.domain?.devices?.interfaces ??
     [];
+  const statusInterfaces = instance.vmi?.status?.interfaces ?? [];
   const annotations =
     instance.vm?.spec?.template?.metadata?.annotations ??
     instance.vm?.metadata?.annotations ??
@@ -87,6 +88,7 @@ export function extractNetworksFromInstance(
 
     // Match interface by name first, fall back to array index
     const iface = domainInterfaces.find(item => item.name === v.name) ?? domainInterfaces[i];
+    const statusIface = statusInterfaces.find(item => item.name === v.name) ?? statusInterfaces[i];
 
     const network: CreateInstanceNetwork = {
       order: i,
@@ -94,6 +96,16 @@ export function extractNetworksFromInstance(
       model: iface?.model || NETWORK_MODEL_AUTO,
       enabled: iface?.state !== 'down',
     };
+
+    const macAnnotationKey = `${subnetEid}.spx-${projectId}.ovn.kubernetes.io/mac_address`;
+    const macAddress =
+      iface?.macAddress ||
+      annotations[macAnnotationKey] ||
+      (projectId ? annotations[`${subnetEid}.${projectId}.ovn.kubernetes.io/mac_address`] : undefined) ||
+      statusIface?.mac;
+    if (macAddress) {
+      network.macAddress = macAddress;
+    }
 
     const annotationKey = `${subnetEid}.spx-${projectId}.ovn.kubernetes.io/ip_address`;
     const ipAddress = annotations[annotationKey];

@@ -116,6 +116,7 @@ export interface CreateInstanceNetwork {
   enabled?: boolean;
   ipv4?: string;
   ipv6?: string;
+  macAddress?: string;
 }
 
 export interface CreateInstanceDisk {

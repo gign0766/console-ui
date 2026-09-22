@@ -1,5 +1,5 @@
 import { FormControl, ValidationErrors } from '@angular/forms';
-import { ipInCidrValidator, ipv4Validator, jsonValidator } from './validators';
+import { ipInCidrValidator, ipv4Validator, jsonValidator, macValidator } from './validators';
 
 describe('ipv4Validator', () => {
   const validate = (value: string): ValidationErrors | null => ipv4Validator()(new FormControl(value));
@@ -52,6 +52,28 @@ describe('jsonValidator', () => {
     { name: 'trailing comma', value: '{"a": 1,}', expected: { json: true } },
     { name: 'plain string', value: 'not-json', expected: { json: true } },
     { name: 'unterminated object', value: '{"a":', expected: { json: true } },
+  ];
+
+  cases.forEach(({ name, value, expected }) => {
+    it(`should return ${JSON.stringify(expected)} for ${name}`, () => {
+      expect(validate(value)).toEqual(expected);
+    });
+  });
+});
+
+describe('macValidator', () => {
+  const validate = (value: string): ValidationErrors | null => macValidator()(new FormControl(value));
+
+  const cases: { name: string; value: string; expected: ValidationErrors | null }[] = [
+    { name: 'empty value passes (required owns emptiness)', value: '', expected: null },
+    { name: 'valid colon-delimited MAC', value: '52:54:00:11:22:33', expected: null },
+    { name: 'valid hyphen-delimited MAC', value: '52-54-00-11-22-33', expected: null },
+    { name: 'valid lowercase MAC', value: '52:54:00:ab:cd:ef', expected: null },
+    { name: 'valid uppercase MAC', value: '52:54:00:AB:CD:EF', expected: null },
+    { name: 'invalid short MAC', value: '52:54:00:11:22', expected: { mac: true } },
+    { name: 'invalid long MAC', value: '52:54:00:11:22:33:44', expected: { mac: true } },
+    { name: 'invalid non-hex octet', value: '52:54:00:11:22:zz', expected: { mac: true } },
+    { name: 'arbitrary text', value: 'not-a-mac', expected: { mac: true } },
   ];
 
   cases.forEach(({ name, value, expected }) => {

@@ -8,7 +8,7 @@ import {
   ValidatorFn,
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
-import { IsIPinRange, IsValidIp, IsValidIPv4 } from '@products/00_shared/utils/ip';
+import { IsIPinRange, IsValidIp, IsValidIPv4, IsValidMac } from '@products/00_shared/utils/ip';
 import { LABEL_REGEX } from '@shared/models/consts';
 
 /** Error when invalid control is dirty, touched, or submitted. */
@@ -66,6 +66,15 @@ export function ipv4Validator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (control.value && !IsValidIPv4(control.value)) {
       return { ipv4: true };
+    }
+    return null;
+  };
+}
+
+export function macValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (control.value && !IsValidMac(control.value)) {
+      return { mac: true };
     }
     return null;
   };

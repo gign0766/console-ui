@@ -1,0 +1,149 @@
+<div class="product-details">
+  <h2>Network</h2>
+
+  @let networks = instance().vmi?.spec?.networks ?? instance().vm?.spec?.template?.spec?.networks ?? [];
+
+  @if (networks.length === 0) {
+    <spx-banner [level]="BannerLevelEnum.Info"> No network interfaces attached to this instance. </spx-banner>
+  } @else {
+    <div spxGrid>
+      @for (network of networks; track network.name ?? $index) {
+        @let vmInterface = getVmInterface(network.name, $index);
+        @let vmiInterface = getVmiInterface(network.name, $index);
+        @let subnet = subnetsMap().get(network.name);
+        @let isPrimary = $index === 0;
+
+        <div class="product-details__card sg-r2 sg-c2 interface-card">
+          <!-- CARD HEADER -->
+          <div class="interface-card__header d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h3 class="m-0">{{ network.name }}</h3>
+              @if (isPrimary) {
+                <mat-icon class="primary-icon" matTooltip="Primary interface" aria-label="Primary interface">
+                  star
+                </mat-icon>
+              }
+              @if (isPrimaryInterfaceDisabled($index, vmInterface)) {
+                <span class="warning-badge">
+                  <mat-icon class="warning-badge__icon">warning</mat-icon>
+                  Primary interface disabled
+                </span>
+              }
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              @if (isLinkStateSyncing(network.name, vmInterface, vmiInterface)) {
+                <mat-chip-set aria-label="updating link state">
+                  <mat-chip class="status-chip--warning" disabled="true">
+                    <div class="d-flex align-items-center gap-1">
+                      <mat-progress-spinner mode="indeterminate" diameter="14" />
+                      <span>Updating link state...</span>
+                    </div>
+                  </mat-chip>
+                </mat-chip-set>
+              }
+              @let isDesiredUp = isInterfaceDesiredUp(vmInterface);
+              <button
+                matIconButton
+                [disabled]="!canToggleLinkState() || isUpdatingLinkState(network.name)"
+                (click)="toggleInterfaceLink(network.name, !isDesiredUp)"
+                [matTooltip]="isDesiredUp ? 'Disable network interface' : 'Enable network interface'"
+                [aria-label]="(isDesiredUp ? 'Disable ' : 'Enable ') + network.name + ' interface'">
+                <mat-icon [class.status-icon--up]="isDesiredUp" [class.status-icon--down]="!isDesiredUp">
+                  {{ isDesiredUp ? 'link' : 'link_off' }}
+                </mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- SECTION 1: STATUS -->
+          <div class="interface-card__section">
+            <span class="interface-card__section-title">Link Status</span>
+            <div class="product-details__card-line product-details__card-line--split">
+              <span class="product-details__card-line-left"><strong>Desired State:</strong></span>
+              <span class="product-details__card-line-right">
+                <mat-chip
+                  [class]="isInterfaceDesiredUp(vmInterface) ? 'status-chip--ready' : 'status-chip--stopped'"
+                  disabled="true">
+                  {{ isInterfaceDesiredUp(vmInterface) ? 'Up' : 'Down' }}
+                </mat-chip>
+              </span>
+
+              <span class="product-details__card-line-left"><strong>Carrier State:</strong></span>
+              <span class="product-details__card-line-right">
+                <mat-chip
+                  [class]="
+                    vmiInterface?.linkState === 'up' && isVmRunning() ? 'status-chip--ready' : 'status-chip--stopped'
+                  "
+                  disabled="true">
+                  {{ getOperationalCarrierState(vmiInterface) }}
+                </mat-chip>
+              </span>
+            </div>
+          </div>
+
+          <!-- SECTION 2: NETWORK & ADDRESSING -->
+          <div class="interface-card__section mt-2">
+            <span class="interface-card__section-title">Network & Addressing</span>
+            <div class="product-details__card-line product-details__card-line--split">
+              @if (subnet) {
+                <span class="product-details__card-line-left"><strong>Subnet Name:</strong></span>
+                <span class="product-details__card-line-right d-flex align-items-center gap-1">
+                  <span>{{ subnet.productName }}</span>
+                  <a
+                    class="color-primary"
+                    matIconButton
+                    [routerLink]="['/products', 'network', 'subnet', 'details', az(), subnet.eid]"
+                    aria-label="View subnet details"
+                    matTooltip="View subnet details"
+                    target="_blank">
+                    <mat-icon>open_in_new</mat-icon>
+                  </a>
+                </span>
+
+                <span class="product-details__card-line-left"><strong>Subnet ID:</strong></span>
+                <span class="product-details__card-line-right">
+                  <spx-span-copy [value]="subnet.id" />
+                </span>
+
+                <span class="product-details__card-line-left"><strong>CIDR Block:</strong></span>
+                <span class="product-details__card-line-right">{{ subnet.subnet?.spec?.cidrBlock }}</span>
+              } @else {
+                <span class="product-details__card-line-left"><strong>Network Name:</strong></span>
+                <span class="product-details__card-line-right">{{ network.multus?.networkName }}</span>
+              }
+
+              <span class="product-details__card-line-left"><strong>Assigned IP:</strong></span>
+              <span class="product-details__card-line-right">
+                @if (vmiInterface?.ipAddresses && vmiInterface!.ipAddresses.length > 0) {
+                  <spx-span-copy [value]="vmiInterface!.ipAddresses.join(', ')" />
+                } @else {
+                  <i>None</i>
+                }
+              </span>
+            </div>
+          </div>
+
+          <!-- SECTION 3: HARDWARE SPECS -->
+          <div class="interface-card__section mt-2">
+            <span class="interface-card__section-title">Hardware Specifications</span>
+            <div class="product-details__card-line product-details__card-line--split">
+              @let macAddress = vmiInterface?.mac || vmInterface?.macAddress;
+              <span class="product-details__card-line-left"><strong>MAC Address:</strong></span>
+              <span class="product-details__card-line-right">
+                @if (macAddress) {
+                  <spx-span-copy [value]="macAddress" />
+                } @else {
+                  <i>Unknown</i>
+                }
+              </span>
+
+              <span class="product-details__card-line-left"><strong>Mount Type:</strong></span>
+              <span class="product-details__card-line-right">{{ vmInterface?.model || 'auto' }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

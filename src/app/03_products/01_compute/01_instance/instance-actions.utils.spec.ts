@@ -210,11 +210,77 @@ describe('InstanceActions Utilities', () => {
       expect(result[0].enabled).toBeTrue();
       expect(result[0].model).toBe('auto');
     });
+
+    it('should extract macAddress from domain interface, annotation, and vmi status', () => {
+      const instance = {
+        id: 'inst-mac',
+        eid: 'inst-mac',
+        productName: 'vm-mac',
+        gitops: '',
+        vm: {
+          kind: 'VirtualMachine',
+          apiVersion: 'kubevirt.io/v1',
+          metadata: { name: 'vm-mac' },
+          status: { created: true, ready: true, printableStatus: 'Running' },
+          spec: {
+            template: {
+              metadata: {
+                name: 'vm-mac',
+                annotations: {
+                  // Net 1 has MAC in annotation
+                  [`sub-annot.spx-${projectId}.ovn.kubernetes.io/mac_address`]: '52:54:00:22:33:44',
+                },
+              },
+              spec: {
+                architecture: 'amd64',
+                hostname: 'vm-mac',
+                accessCredentials: [],
+                volumes: [],
+                domain: {
+                  resources: {},
+                  devices: {
+                    disks: [],
+                    interfaces: [
+                      // Net 0 has explicit macAddress on domain interface
+                      { name: 'interface-0', model: 'virtio', macAddress: '52:54:00:11:22:33' },
+                      // Net 1 has no macAddress on domain interface
+                      { name: 'interface-1', model: 'virtio' },
+                      // Net 2 has no macAddress on domain interface
+                      { name: 'interface-2', model: 'virtio' },
+                    ],
+                  },
+                },
+                networks: [
+                  { name: 'interface-0', multus: { networkName: `spx-${projectId}/sub-domain` } },
+                  { name: 'interface-1', multus: { networkName: `spx-${projectId}/sub-annot` } },
+                  { name: 'interface-2', multus: { networkName: `spx-${projectId}/sub-status` } },
+                ],
+              },
+            },
+          },
+        },
+        vmi: {
+          status: {
+            interfaces: [
+              // Net 2 has MAC in status
+              { name: 'interface-2', mac: '52:54:00:55:66:77' },
+            ],
+          },
+        },
+      } as unknown as ProductInstance;
+
+      const result = extractNetworksFromInstance(instance, projectId);
+      expect(result.length).toBe(3);
+
+      expect(result[0].macAddress).toBe('52:54:00:11:22:33');
+      expect(result[1].macAddress).toBe('52:54:00:22:33:44');
+      expect(result[2].macAddress).toBe('52:54:00:55:66:77');
+    });
   });
 
   describe('buildUpdatePayloadFromInstance', () => {
     const updatedNetworks: CreateInstanceNetwork[] = [
-      { order: 0, subnetEId: 'sub-1', model: 'virtio', enabled: true },
+      { order: 0, subnetEId: 'sub-1', model: 'virtio', enabled: true, macAddress: '52:54:00:11:22:33' },
       { order: 1, subnetEId: 'sub-2', model: 'virtio', enabled: false },
     ];
 

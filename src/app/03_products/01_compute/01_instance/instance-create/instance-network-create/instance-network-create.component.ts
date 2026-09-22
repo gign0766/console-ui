@@ -16,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import {
   CreateInstanceNetwork,
@@ -24,10 +25,10 @@ import {
 } from '@products/00_shared/models/compute/instance/instance';
 import { ProductSubnet } from '@products/00_shared/models/product.model';
 import { SubnetService } from '@products/00_shared/services/subnet.service';
-import { CidrForVersion, CidrNetworkAddress } from '@products/00_shared/utils/ip';
+import { CidrForVersion, CidrNetworkAddress, GenerateRandomMac } from '@products/00_shared/utils/ip';
 import { ConfirmDialog } from '@shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { StateService } from '@shared/services/state.service';
-import { ipInCidrValidator, ipValidator } from '@shared/utils/validators';
+import { ipInCidrValidator, ipValidator, macValidator } from '@shared/utils/validators';
 import { of } from 'rxjs';
 
 @Component({
@@ -40,6 +41,7 @@ import { of } from 'rxjs';
     MatInputModule,
     MatIconModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
@@ -77,6 +79,7 @@ export class InstanceNetworkCreateComponent {
   protected cidrNetworkAddress = CidrNetworkAddress;
 
   staticIpMap = new Map<string, string>();
+  staticMacMap = new Map<string, string>();
   networkModelMap = new Map<string, string>();
 
   subnetsProduct = rxResource({
@@ -108,6 +111,7 @@ export class InstanceNetworkCreateComponent {
       if (this.az() == null || this.az()) {
         this.networkList = [];
         this.staticIpMap.clear();
+        this.staticMacMap.clear();
         this.updateOutput();
       }
     });
@@ -127,12 +131,24 @@ export class InstanceNetworkCreateComponent {
               this.staticIpMap.set(`${product.id}-v6`, n.ipv6);
             }
 
+            if (n.macAddress) {
+              this.staticMacMap.set(product.id, n.macAddress);
+            }
+
             if (n.model) {
               this.networkModelMap.set(product.id, n.model);
             }
 
             const enabled = n.enabled ?? true;
-            this.addFormControl(product.id, product.subnet?.spec?.cidrBlock, n.ipv4, n.ipv6, n.model, enabled);
+            this.addFormControl(
+              product.id,
+              product.subnet?.spec?.cidrBlock,
+              n.ipv4,
+              n.ipv6,
+              n.model,
+              enabled,
+              n.macAddress
+            );
           }
         });
         this.networkList = networkList;
@@ -151,7 +167,15 @@ export class InstanceNetworkCreateComponent {
     }
   }
 
-  addFormControl(id: string, cidr?: string, ipv4?: string, ipv6?: string, model?: string, enabled = true) {
+  addFormControl(
+    id: string,
+    cidr?: string,
+    ipv4?: string,
+    ipv6?: string,
+    model?: string,
+    enabled = true,
+    macAddress?: string
+  ) {
     const group = new FormGroup({});
 
     const v4Cidr = cidr ? CidrForVersion(cidr, 4) : undefined;
@@ -159,6 +183,7 @@ export class InstanceNetworkCreateComponent {
 
     group.addControl('v4', new FormControl(ipv4 || '', [ipValidator(), ipInCidrValidator(v4Cidr)]));
     group.addControl('v6', new FormControl(ipv6 || '', [ipValidator(), ipInCidrValidator(v6Cidr)]));
+    group.addControl('macAddress', new FormControl(macAddress || '', [macValidator()]));
     group.addControl('model', new FormControl(model || ''));
     group.addControl('enabled', new FormControl(enabled));
 
@@ -226,6 +251,7 @@ export class InstanceNetworkCreateComponent {
           enabled: this.isInterfaceEnabled(v.id),
           ipv4: this.staticIpMap.get(`${v.id}-v4`),
           ipv6: this.staticIpMap.get(`${v.id}-v6`),
+          macAddress: this.staticMacMap.get(v.id),
           model: this.networkModelMap.get(v.id),
         };
       })
@@ -237,6 +263,26 @@ export class InstanceNetworkCreateComponent {
   updateStaticIp(id: string, ip: string, type: 'v4' | 'v6') {
     this.staticIpMap.set(`${id}-${type}`, ip);
     this.updateOutput();
+  }
+
+  updateStaticMac(id: string, mac: string) {
+    if (mac) {
+      this.staticMacMap.set(id, mac);
+    } else {
+      this.staticMacMap.delete(id);
+    }
+    this.updateOutput();
+  }
+
+  scrambleMac(id: string) {
+    const newMac = GenerateRandomMac();
+    const group = this.formIps.get(id) as FormGroup | null;
+    const ctrl = group?.get('macAddress');
+    if (ctrl) {
+      ctrl.setValue(newMac);
+      ctrl.markAsDirty();
+    }
+    this.updateStaticMac(id, newMac);
   }
 
   updateNetworkModel(id: string, model: string) {

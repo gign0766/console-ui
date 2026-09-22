@@ -60,6 +60,7 @@ export interface InterfaceElement {
   model?: string;
   name: string;
   state?: 'up' | 'down';
+  macAddress?: string;
 }
 
 export interface Volume {
