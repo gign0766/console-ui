@@ -1,0 +1,96 @@
+@use '@angular/material' as mat;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.audit-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+
+  &__content {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 200px;
+
+    mat-table {
+      height: 100%;
+      width: 100%;
+      overflow: auto;
+      border-radius: var(--mat-sys-corner-small);
+    }
+  }
+
+  &__loading-shade {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--mat-sys-corner-small);
+    background: var(--mat-sys-disable-state-bg);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__error {
+    text-align: center;
+    font: var(--mat-sys-headline-medium);
+  }
+
+  &__row {
+    cursor: pointer;
+  }
+
+  &__stacked {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__secondary {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .mat-mdc-cell {
+    // `text-truncate` needs this inside flex cells
+    min-width: 0;
+    overflow: hidden;
+    padding-right: 8px;
+  }
+
+  .mat-column-startedAt {
+    max-width: 170px;
+  }
+
+  .mat-column-sourceIp {
+    max-width: 160px;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    @include mat.paginator-overrides(
+      (
+        container-background-color: transparent,
+      )
+    );
+  }
+
+  &__footnote {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font: var(--mat-sys-label-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}

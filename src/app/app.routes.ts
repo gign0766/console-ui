@@ -65,6 +65,17 @@ export const routes: Routes = [
               permission: PermissionsEnum.OrganizationRead,
             },
           },
+          {
+            path: 'audit-log',
+            loadComponent: () =>
+              import('./05_organization/organization-audit-log/organization-audit-log.component').then(
+                m => m.OrganizationAuditLogComponent
+              ),
+            canActivate: [permissionGuard],
+            data: {
+              permission: PermissionsEnum.OrganizationAuditLogRead,
+            },
+          },
         ],
       },
       {

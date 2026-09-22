@@ -1,0 +1,123 @@
+<div class="audit-table">
+  <div class="audit-table__content">
+    @if (loading() || error()) {
+      <div class="audit-table__loading-shade">
+        @if (loading()) {
+          <mat-spinner></mat-spinner>
+        } @else {
+          <div class="audit-table__error">Failed to retrieve events</div>
+        }
+      </div>
+    }
+
+    <mat-table [dataSource]="events()" [trackBy]="trackBy">
+      <ng-container matColumnDef="startedAt">
+        <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          <span
+            matTooltipClass="tooltip--multiline"
+            [matTooltip]="
+              (event.startedAt | date: 'medium') +
+              '\n' +
+              (event.startedAt | date: 'yyyy-MM-dd HH:mm:ss' : 'UTC') +
+              ' UTC'
+            ">
+            {{ event.startedAt | date: 'short' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="eventType">
+        <mat-header-cell *matHeaderCellDef> Event </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          <span [matTooltip]="event.eventType">{{ display(event).label }}</span>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="resource">
+        <mat-header-cell *matHeaderCellDef> Resource </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          <div class="audit-table__stacked">
+            <span>{{ display(event).resourceLabel }}</span>
+            @if (event.resourceId) {
+              <span class="audit-table__secondary text-truncate" [matTooltip]="event.resourceId">
+                {{ event.resourceId }}
+              </span>
+            }
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="project">
+        <mat-header-cell *matHeaderCellDef> Project </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          @if (event.projectId) {
+            <span class="text-truncate" [matTooltip]="event.projectId">{{ projectName(event.projectId) }}</span>
+          } @else {
+            -
+          }
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="user">
+        <mat-header-cell *matHeaderCellDef> Initiator </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          <span class="text-truncate" [matTooltip]="event.userEmail || event.userId">
+            {{ event.userEmail || event.userId || '-' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="sourceIp">
+        <mat-header-cell *matHeaderCellDef> Source IP </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          {{ event.sourceIp }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+        <mat-cell *matCellDef="let event">
+          <mat-chip-set aria-label="event status">
+            <mat-chip [class]="statusChip(event.status).cls" disabled="true">
+              {{ statusChip(event.status).label }}
+            </mat-chip>
+          </mat-chip-set>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns(); sticky: true"></mat-header-row>
+      <mat-row
+        *matRowDef="let row; columns: displayedColumns()"
+        class="audit-table__row"
+        tabindex="0"
+        (click)="rowClick.emit(row)"
+        (keydown.enter)="rowClick.emit(row)"></mat-row>
+
+      <ng-template matNoDataRow>
+        <tr class="d-flex mat-mdc-row">
+          <td class="mat-mdc-cell d-flex flex-grow align-items-center justify-content-center">
+            @if (!loading() && !error()) {
+              <span>No events match these filters.</span>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </mat-table>
+  </div>
+
+  <div class="audit-table__footer">
+    <div class="audit-table__footnote">
+      <ng-content select="[auditFootnote]"></ng-content>
+      <span>* Times are shown in your local timezone ({{ timezoneLabel }})</span>
+    </div>
+    <mat-paginator
+      [length]="page()?.total ?? 0"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="pageSizes"
+      showFirstLastButtons
+      aria-label="Select page of audit events"
+      (page)="pageChange.emit($event)"></mat-paginator>
+  </div>
+</div>

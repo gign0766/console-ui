@@ -29,6 +29,7 @@ import { BannerLevelEnum } from '@shared/models/enums';
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
 import { Organization } from '@shared/models/data/organization';
 import { MatSortModule, Sort } from '@angular/material/sort';
+import { UserSecurityActivityComponent } from './user-security-activity/user-security-activity.component';
 
 function compare(a: number | string, b: number | string, isAsc: boolean) {
   return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
@@ -64,6 +65,7 @@ function sortData(this: Sort, a: ApiToken, b: ApiToken) {
     BannerComponent,
     SpanCopyComponent,
     MatSortModule,
+    UserSecurityActivityComponent,
   ],
   templateUrl: './user-details.component.html',
   styleUrl: './user-details.component.scss',
