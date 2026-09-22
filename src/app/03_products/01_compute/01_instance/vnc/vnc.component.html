@@ -1,11 +1,14 @@
 <div class="vnc">
   <div class="vnc__header">
     <div class="vnc__header-status">
-      <button matIconButton class="vnc__header-paste" (click)="refreshSession()"><mat-icon>refresh</mat-icon></button>
+      <button matIconButton (click)="refreshSession()"><mat-icon>refresh</mat-icon></button>
       <span #status></span>
     </div>
     <div class="vnc__header-actions">
-      <button matButton="outlined" class="vnc__header-paste" (click)="paste()">Coller</button>
+      <button matButton="outlined" title="Type the clipboard text into the VM using the selected keyboard layout" (click)="paste()">
+        <mat-icon>content_paste</mat-icon>
+        Paste from clipboard
+      </button>
       <button matButton="outlined" class="vnc__header-ctrlAltDel" (click)="sendCtrlAltDel()">Ctrl+Alt+Del</button>
       <button
         matIconButton
@@ -19,6 +22,6 @@
   <div class="vnc__screen" #screen></div>
 
   @if (showVirtualKeyboard()) {
-    <spx-virtual-keyboard (keyPress)="onVirtualKeyPress($event)" />
+    <spx-virtual-keyboard [layout]="guestLayout()" (layoutChange)="setGuestLayout($event)" (keyPress)="onVirtualKeyPress($event)" />
   }
 </div>

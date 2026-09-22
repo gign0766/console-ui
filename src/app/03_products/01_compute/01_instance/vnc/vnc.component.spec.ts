@@ -57,12 +57,12 @@ describe('VNCComponent', () => {
     // 'b' no Shift: b down, b up = 2 calls
     expect(mockRfb.sendKey).toHaveBeenCalledTimes(6);
     const calls = mockRfb.sendKey.calls.allArgs();
-    expect(calls[0]).toEqual([0xffe1, null, true]);  // Shift down
-    expect(calls[1]).toEqual([0x41, null, true]);     // A down
-    expect(calls[2]).toEqual([0x41, null, false]);    // A up
-    expect(calls[3]).toEqual([0xffe1, null, false]);  // Shift up
-    expect(calls[4]).toEqual([0x62, null, true]);     // b down
-    expect(calls[5]).toEqual([0x62, null, false]);    // b up
+    expect(calls[0]).toEqual([0xffe1, 'ShiftLeft', true]);  // Shift down
+    expect(calls[1]).toEqual([0x41, 'KeyA', true]);     // A down
+    expect(calls[2]).toEqual([0x41, 'KeyA', false]);    // A up
+    expect(calls[3]).toEqual([0xffe1, 'ShiftLeft', false]);  // Shift up
+    expect(calls[4]).toEqual([0x62, 'KeyB', true]);     // b down
+    expect(calls[5]).toEqual([0x62, 'KeyB', false]);    // b up
   });
 
   it('should convert newlines to Return keysym during paste', async () => {
@@ -78,30 +78,30 @@ describe('VNCComponent', () => {
     await component.paste();
 
     expect(mockRfb.sendKey).toHaveBeenCalledTimes(6);
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, null, true); // 'a' down
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, null, false); // 'a' up
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0xff0d, null, true); // Return down
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0xff0d, null, false); // Return up
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x62, null, true); // 'b' down
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x62, null, false); // 'b' up
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, 'KeyA', true); // 'a' down
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, 'KeyA', false); // 'a' up
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0xff0d, 'Enter', true); // Return down
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0xff0d, 'Enter', false); // Return up
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x62, 'KeyB', true); // 'b' down
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x62, 'KeyB', false); // 'b' up
   });
 
-  it('should handle Unicode characters with 0x01000000 offset during paste', async () => {
+  it('should skip characters missing from the guest layout during paste', async () => {
     const mockRfb = {
       sendKey: jasmine.createSpy('sendKey'),
       disconnect: jasmine.createSpy('disconnect'),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.rfb = mockRfb as any;
+    spyOn(component, 'updateStatus');
 
     spyOn(navigator.clipboard, 'readText').and.returnValue(Promise.resolve('é'));
 
     await component.paste();
 
-    expect(mockRfb.sendKey).toHaveBeenCalledTimes(2);
-    // 'é' = U+00E9, in Latin-1 supplement range (0xa0-0xff), maps directly
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0xe9, null, true);
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0xe9, null, false);
+    // 'é' is not on the default English (US) layout
+    expect(mockRfb.sendKey).not.toHaveBeenCalled();
+    expect(component.updateStatus).toHaveBeenCalledWith(jasmine.stringMatching(/é$/));
   });
 
   it('should wrap shifted symbols with Shift key events during paste', async () => {
@@ -119,14 +119,14 @@ describe('VNCComponent', () => {
     // '@' and '#' are shifted chars: each gets Shift down, key down, key up, Shift up
     expect(mockRfb.sendKey).toHaveBeenCalledTimes(8);
     const calls = mockRfb.sendKey.calls.allArgs();
-    expect(calls[0]).toEqual([0xffe1, null, true]);  // Shift down
-    expect(calls[1]).toEqual([0x40, null, true]);     // @ down
-    expect(calls[2]).toEqual([0x40, null, false]);    // @ up
-    expect(calls[3]).toEqual([0xffe1, null, false]);  // Shift up
-    expect(calls[4]).toEqual([0xffe1, null, true]);   // Shift down
-    expect(calls[5]).toEqual([0x23, null, true]);     // # down
-    expect(calls[6]).toEqual([0x23, null, false]);    // # up
-    expect(calls[7]).toEqual([0xffe1, null, false]);  // Shift up
+    expect(calls[0]).toEqual([0xffe1, 'ShiftLeft', true]);  // Shift down
+    expect(calls[1]).toEqual([0x40, 'Digit2', true]);     // @ down
+    expect(calls[2]).toEqual([0x40, 'Digit2', false]);    // @ up
+    expect(calls[3]).toEqual([0xffe1, 'ShiftLeft', false]);  // Shift up
+    expect(calls[4]).toEqual([0xffe1, 'ShiftLeft', true]);   // Shift down
+    expect(calls[5]).toEqual([0x23, 'Digit3', true]);     // # down
+    expect(calls[6]).toEqual([0x23, 'Digit3', false]);    // # up
+    expect(calls[7]).toEqual([0xffe1, 'ShiftLeft', false]);  // Shift up
   });
 
   it('should not paste when rfb is not initialized', async () => {
@@ -150,22 +150,69 @@ describe('VNCComponent', () => {
     expect(mockRfb.disconnect).toHaveBeenCalled();
   });
 
-  it('should lock QEMU extended key events to false on connect to fix AZERTY layout', () => {
+  it('should paste through the key positions of the guest layout', async () => {
     const mockRfb = {
-      _qemuExtKeyEventSupported: true,
+      sendKey: jasmine.createSpy('sendKey'),
+      disconnect: jasmine.createSpy('disconnect'),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component.rfb = mockRfb as any;
+    component.guestLayout.set('french');
+    spyOn(component, 'updateStatus');
+
+    spyOn(navigator.clipboard, 'readText').and.returnValue(Promise.resolve('a@A\n'));
+
+    await component.paste();
+
+    expect(mockRfb.sendKey.calls.allArgs()).toEqual([
+      // 'a' is on the US 'q' key
+      [0x61, 'KeyQ', true],
+      [0x61, 'KeyQ', false],
+      // '@' needs AltGr, which the layout data does not cover: skipped
+      // 'A' is Shift + the US 'q' key
+      [0xffe1, 'ShiftLeft', true],
+      [0x41, 'KeyQ', true],
+      [0x41, 'KeyQ', false],
+      [0xffe1, 'ShiftLeft', false],
+      [0xff0d, 'Enter', true],
+      [0xff0d, 'Enter', false],
+    ]);
+    expect(component.updateStatus).toHaveBeenCalledWith(jasmine.stringMatching(/French.*: @$/));
+  });
+
+  it('should remember the guest layout per VM', () => {
+    component.vmName = 'spec-vm';
+    spyOn(localStorage, 'setItem');
+
+    component.setGuestLayout('french');
+
+    expect(component.guestLayout()).toBe('french');
+    expect(localStorage.setItem).toHaveBeenCalledWith('spx.vnc.guestLayout.spec-vm', 'french');
+  });
+
+  it('should wrap the key with AltGr via onVirtualKeyPress', () => {
+    const mockRfb = {
+      sendKey: jasmine.createSpy('sendKey'),
       disconnect: jasmine.createSpy('disconnect'),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.rfb = mockRfb as any;
 
-    component.connectedToServer();
+    component.onVirtualKeyPress({
+      keysym: 0x30,
+      code: 'Digit0',
+      needsShift: false,
+      needsCtrl: false,
+      needsAlt: false,
+      needsAltGr: true,
+    });
 
-    // Property should always read as false via getter
-    expect(mockRfb._qemuExtKeyEventSupported).toBeFalse();
-
-    // Verify writes are silently ignored (no-op setter)
-    mockRfb._qemuExtKeyEventSupported = true;
-    expect(mockRfb._qemuExtKeyEventSupported).toBeFalse();
+    expect(mockRfb.sendKey.calls.allArgs()).toEqual([
+      [0xffea, 'AltRight', true],
+      [0x30, 'Digit0', true],
+      [0x30, 'Digit0', false],
+      [0xffea, 'AltRight', false],
+    ]);
   });
 
   it('should toggle virtual keyboard visibility', () => {
@@ -203,11 +250,11 @@ describe('VNCComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.rfb = mockRfb as any;
 
-    component.onVirtualKeyPress({ keysym: 0x61, needsShift: false, needsCtrl: false, needsAlt: false });
+    component.onVirtualKeyPress({ keysym: 0x61, code: 'KeyA', needsShift: false, needsCtrl: false, needsAlt: false });
 
     expect(mockRfb.sendKey).toHaveBeenCalledTimes(2);
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, null, true);
-    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, null, false);
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, 'KeyA', true);
+    expect(mockRfb.sendKey).toHaveBeenCalledWith(0x61, 'KeyA', false);
   });
 
   it('should send keysym with shift wrapping via onVirtualKeyPress', () => {
@@ -218,13 +265,13 @@ describe('VNCComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.rfb = mockRfb as any;
 
-    component.onVirtualKeyPress({ keysym: 0x41, needsShift: true, needsCtrl: false, needsAlt: false });
+    component.onVirtualKeyPress({ keysym: 0x41, code: 'KeyA', needsShift: true, needsCtrl: false, needsAlt: false });
 
     expect(mockRfb.sendKey).toHaveBeenCalledTimes(4);
     const calls = mockRfb.sendKey.calls.allArgs();
     expect(calls[0]).toEqual([0xffe1, 'ShiftLeft', true]);  // Shift down
-    expect(calls[1]).toEqual([0x41, null, true]);            // A down
-    expect(calls[2]).toEqual([0x41, null, false]);           // A up
+    expect(calls[1]).toEqual([0x41, 'KeyA', true]);            // A down
+    expect(calls[2]).toEqual([0x41, 'KeyA', false]);           // A up
     expect(calls[3]).toEqual([0xffe1, 'ShiftLeft', false]); // Shift up
   });
 
@@ -284,7 +331,7 @@ describe('VNCComponent', () => {
   it('should not send keysym via onVirtualKeyPress when rfb is undefined', () => {
     component.rfb = undefined;
     // Should not throw
-    component.onVirtualKeyPress({ keysym: 0x61, needsShift: false, needsCtrl: false, needsAlt: false });
+    component.onVirtualKeyPress({ keysym: 0x61, code: 'KeyA', needsShift: false, needsCtrl: false, needsAlt: false });
   });
 
   it('should send Ctrl+Alt+Del when rfb is connected', () => {

@@ -1,5 +1,23 @@
 <div class="virtual-keyboard">
   <div class="virtual-keyboard__content">
+  <div class="virtual-keyboard__toolbar">
+    <button
+      matButton
+      [matMenuTriggerFor]="layoutMenu"
+      aria-label="Guest keyboard layout"
+      title="Keyboard layout configured in the VM. The virtual keyboard and Paste follow it; your physical keyboard must use the same layout.">
+      Keyboard Layout: {{ layoutLabel() }}
+    </button>
+    <mat-menu #layoutMenu="matMenu">
+      @for (item of layouts; track item.id) {
+        <button mat-menu-item (click)="layout.set(item.id)">
+          <mat-icon>{{ item.id === layout() ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+          {{ item.label }}
+        </button>
+      }
+    </mat-menu>
+  </div>
+
   <div class="virtual-keyboard__row virtual-keyboard__row--fn">
     @for (key of functionRow; track key.label) {
       <button
@@ -15,7 +33,7 @@
 
   <div class="virtual-keyboard__body">
     <div class="virtual-keyboard__main">
-      @for (row of rows; track $index) {
+      @for (row of rows(); track $index) {
         <div class="virtual-keyboard__row">
           @for (key of row; track key.label + $index) {
             <button
