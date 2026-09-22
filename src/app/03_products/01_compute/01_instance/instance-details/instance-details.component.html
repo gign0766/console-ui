@@ -167,55 +167,11 @@
       <!-- NETWORK -->
       <mat-tab label="Network">
         <ng-template matTabContent>
-          <h2>Network</h2>
-
-          <div spxGrid>
-            @let networks =
-              instance.vmi?.spec?.networks ? instance.vmi!.spec.networks : instance.vm?.spec?.template?.spec?.networks;
-
-            @for (network of networks; track $index) {
-              <div class="product-details__card sg-r2 sg-c2">
-                @let subnet = networkSubnetsMap().get(network.name);
-                <div class="d-flex align-items-center">
-                  <h3>{{ network.name }}</h3>
-                  <span class="ml-2"> {{ subnet ? '(linked to a subnet)' : '' }} </span>
-                  @if (subnet) {
-                    <a
-                      class="ml-1 color-primary"
-                      matIconButton
-                      [routerLink]="['/products', 'network', 'subnet', 'details', az(), subnet.eid]"
-                      aria-label="Go to subnet"
-                      target="_blank">
-                      <mat-icon> open_in_new</mat-icon>
-                    </a>
-                  }
-                </div>
-                <div class="pl-2 d-flex flex-column">
-                  @if (subnet) {
-                    <div class="d-flex flex-column gap-2">
-                      <spx-span-copy key="Id" [value]="subnet.id" />
-                      <spx-span-copy key="Name" [value]="subnet.productName" />
-
-                      <span> <strong>CIDR Block:</strong> {{ subnet.subnet?.spec?.cidrBlock }} </span>
-                      <span>
-                        <strong>Assigned IP: </strong>
-                        {{ instance.vmi?.status?.interfaces?.[$index]?.ipAddresses?.join(',') }}
-                      </span>
-
-                      <span>
-                        <strong>Mount type: </strong>
-                        {{ instance.vm?.spec?.template?.spec?.domain?.devices?.interfaces?.[$index]?.model || 'auto' }}
-                      </span>
-                    </div>
-                  } @else {
-                    <div class="product-details__grid">
-                      <span class="product-details__left-col"> Network Name: {{ network.multus?.networkName }} </span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
+          <spx-instance-details-network
+            [instance]="instance"
+            [az]="az()"
+            [subnetsMap]="networkSubnetsMap()"
+            (dataChanged)="reload()" />
         </ng-template>
       </mat-tab>
 

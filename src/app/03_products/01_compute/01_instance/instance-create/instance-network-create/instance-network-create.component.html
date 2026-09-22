@@ -59,77 +59,108 @@
       @if (networkList.length > 0) {
         <div cdkDropList class="d-flex flex-column gap-3" (cdkDropListDropped)="drop($event)" [formGroup]="formIps">
           @for (network of networkList; track network.eid) {
-            <div class="d-flex flex-column justify-content-center" cdkDrag>
-              <div class="d-flex flex-grow align-items-center justify-content-between gap-3">
+            <div class="network-item d-flex flex-column justify-content-center" cdkDrag [formGroupName]="network.id">
+              <div class="network-item__header d-flex flex-grow align-items-center justify-content-between gap-3 flex-wrap">
                 <h4 class="label">
-                  <span>
-                    Interface {{ $index }} - {{ network.productName || network.eid }}
-                    @if (network.subnet?.isShared) {
-                      <i>- Shared</i>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span>
+                      Interface {{ $index }} - {{ network.productName || network.eid }}
+                      @if (network.subnet?.isShared) {
+                        <i>- Shared</i>
+                      }
+                    </span>
+                    @if (isPrimaryInterfaceDisabled(network.id)) {
+                      <span class="warning-badge">
+                        <mat-icon class="warning-badge__icon">warning</mat-icon>
+                        Primary interface disabled
+                      </span>
                     }
-                  </span>
-                  <br />
+                  </div>
                   <span> ({{ network.subnet?.spec?.cidrBlock }}) </span>
                 </h4>
-                <div class="d-flex align-items-center gap-2">
+                <div class="network-item__header-actions d-flex align-items-center gap-3">
+                  <mat-slide-toggle formControlName="enabled" (change)="onToggleEnabled($index, network.id, $event)">
+                    Link State: {{ isInterfaceEnabled(network.id) ? 'Up' : 'Down' }}
+                  </mat-slide-toggle>
                   <button class="color-primary" mat-icon-button (click)="removeItemByIndex($index)">
                     <mat-icon>delete</mat-icon>
                   </button>
                   <mat-icon cdkDragHandle>swap_vert</mat-icon>
                 </div>
               </div>
-              <div class="d-flex align-items-center justify-content-between gap-3">
-                <div class="align-items-start d-flex flex-grow gap-3" [formGroupName]="network.id">
-                  @let protocol = network.subnet?.spec?.protocol || '';
-                  @let cidr = network.subnet?.spec?.cidrBlock || '';
-                  @let v4Cidr = cidrForVersion(cidr, 4);
-                  @let v6Cidr = cidrForVersion(cidr, 6);
-                  @if (protocol === 'IPv4' || protocol === 'Dual') {
-                    <mat-form-field class="info-card__item" subscriptSizing="dynamic">
-                      <mat-label>IPv4 - automatic if empty</mat-label>
-                      <input
-                        type="text"
-                        #v4Input
-                        matInput
-                        [placeholder]="v4Cidr ? cidrNetworkAddress(v4Cidr) : '10.0.0.0'"
-                        formControlName="v4"
-                        (blur)="updateStaticIp(network.id, v4Input.value, 'v4')" />
-                      @if (formIps.get([network.id, 'v4'])?.errors?.['ip']) {
-                        <mat-error>Invalid IP address</mat-error>
-                      } @else if (formIps.get([network.id, 'v4'])?.errors?.['ipRange']) {
-                        <mat-error>IP not in subnet range</mat-error>
-                      }
-                    </mat-form-field>
-                  }
-                  @if (protocol === 'IPv6' || protocol === 'Dual') {
-                    <mat-form-field class="info-card__item" subscriptSizing="dynamic">
-                      <mat-label>IPv6 - automatic if empty</mat-label>
-                      <input
-                        type="text"
-                        #v6Input
-                        matInput
-                        [placeholder]="v6Cidr ? cidrNetworkAddress(v6Cidr) : '2001:db8::'"
-                        formControlName="v6"
-                        (blur)="updateStaticIp(network.id, v6Input.value, 'v6')" />
-                      @if (formIps.get([network.id, 'v6'])?.errors?.['ip']) {
-                        <mat-error>Invalid IP address</mat-error>
-                      } @else if (formIps.get([network.id, 'v6'])?.errors?.['ipRange']) {
-                        <mat-error>IP not in subnet range</mat-error>
-                      }
-                    </mat-form-field>
-                  }
-
-                  <mat-form-field class="info-card__item info-card__item--small" subscriptSizing="dynamic">
-                    <mat-label>Mount type</mat-label>
-                    <mat-select
-                      formControlName="model"
-                      (selectionChange)="updateNetworkModel(network.id, $event.value)">
-                      @for (bus of NETWORK_MODEL_LIST; track $index) {
-                        <mat-option [value]="bus"> {{ bus }} </mat-option>
-                      }
-                    </mat-select>
+              <div class="network-item__fields">
+                @let protocol = network.subnet?.spec?.protocol || '';
+                @let cidr = network.subnet?.spec?.cidrBlock || '';
+                @let v4Cidr = cidrForVersion(cidr, 4);
+                @let v6Cidr = cidrForVersion(cidr, 6);
+                @if (protocol === 'IPv4' || protocol === 'Dual') {
+                  <mat-form-field class="network-item__field" subscriptSizing="dynamic">
+                    <mat-label>IPv4 - automatic if empty</mat-label>
+                    <input
+                      type="text"
+                      #v4Input
+                      matInput
+                      [placeholder]="v4Cidr ? cidrNetworkAddress(v4Cidr) : '10.0.0.0'"
+                      formControlName="v4"
+                      (blur)="updateStaticIp(network.id, v4Input.value, 'v4')" />
+                    @if (formIps.get([network.id, 'v4'])?.errors?.['ip']) {
+                      <mat-error>Invalid IP address</mat-error>
+                    } @else if (formIps.get([network.id, 'v4'])?.errors?.['ipRange']) {
+                      <mat-error>IP not in subnet range</mat-error>
+                    }
                   </mat-form-field>
-                </div>
+                }
+                @if (protocol === 'IPv6' || protocol === 'Dual') {
+                  <mat-form-field class="network-item__field" subscriptSizing="dynamic">
+                    <mat-label>IPv6 - automatic if empty</mat-label>
+                    <input
+                      type="text"
+                      #v6Input
+                      matInput
+                      [placeholder]="v6Cidr ? cidrNetworkAddress(v6Cidr) : '2001:db8::'"
+                      formControlName="v6"
+                      (blur)="updateStaticIp(network.id, v6Input.value, 'v6')" />
+                    @if (formIps.get([network.id, 'v6'])?.errors?.['ip']) {
+                      <mat-error>Invalid IP address</mat-error>
+                    } @else if (formIps.get([network.id, 'v6'])?.errors?.['ipRange']) {
+                      <mat-error>IP not in subnet range</mat-error>
+                    }
+                  </mat-form-field>
+                }
+
+                <mat-form-field class="network-item__field" subscriptSizing="dynamic">
+                  <mat-label>MAC Address - automatic if empty</mat-label>
+                  <input
+                    type="text"
+                    #macInput
+                    matInput
+                    placeholder="52:54:00:xx:xx:xx"
+                    formControlName="macAddress"
+                    (blur)="updateStaticMac(network.id, macInput.value)" />
+                  <button
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    aria-label="Generate random MAC address"
+                    matTooltip="Generate random MAC address"
+                    (click)="scrambleMac(network.id)">
+                    <mat-icon>refresh</mat-icon>
+                  </button>
+                  @if (formIps.get([network.id, 'macAddress'])?.errors?.['mac']) {
+                    <mat-error>Invalid MAC address</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field class="network-item__field" subscriptSizing="dynamic">
+                  <mat-label>Mount type</mat-label>
+                  <mat-select
+                    formControlName="model"
+                    (selectionChange)="updateNetworkModel(network.id, $event.value)">
+                    @for (bus of NETWORK_MODEL_LIST; track $index) {
+                      <mat-option [value]="bus"> {{ bus }} </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
               </div>
             </div>
           }

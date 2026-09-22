@@ -22,7 +22,6 @@ import { BannerComponent } from '@shared/components/banner/banner.component';
 import { ButtonWithDropdownComponent } from '@shared/components/button-with-dropdown/button-with-dropdown.component';
 import { ContentHeaderComponent } from '@shared/components/content-header/content-header.component';
 import { SpanCopyComponent } from '@shared/components/span-copy/span-copy.component';
-import { GridDirective } from '@shared/directives/grid.directive';
 import { nonBlockingErrorHandler } from '@shared/http/customHandler';
 import { DR_LABEL_KEYS } from '@shared/models/consts';
 import { BannerLevelEnum } from '@shared/models/enums';
@@ -32,6 +31,7 @@ import { StateService } from '@shared/services/state.service';
 import { forkJoin, Observable, of } from 'rxjs';
 import { InstanceDetailsAdvancedComponent } from './instance-details-advanced/instance-details-advanced.component';
 import { InstanceDetailsGeneralComponent } from './instance-details-general/instance-details-general.component';
+import { InstanceDetailsNetworkComponent } from './instance-details-network/instance-details-network.component';
 import { InstanceDetailsStorageComponent } from './instance-details-storage/instance-details-storage.component';
 import { InstanceActions } from '../instance-actions.utils';
 import { environment } from '@env/environment';
@@ -49,10 +49,10 @@ import { environment } from '@env/environment';
     ContentHeaderComponent,
     InstanceDetailsAdvancedComponent,
     InstanceDetailsGeneralComponent,
+    InstanceDetailsNetworkComponent,
     InstanceDetailsStorageComponent,
     RouterLink,
     BannerComponent,
-    GridDirective,
     SpanCopyComponent,
     ButtonWithDropdownComponent,
   ],

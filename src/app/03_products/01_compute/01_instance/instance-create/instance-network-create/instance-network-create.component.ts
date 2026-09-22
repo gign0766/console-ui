@@ -6,14 +6,17 @@ import {
   moveItemInArray,
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import {
   CreateInstanceNetwork,
@@ -22,15 +25,11 @@ import {
 } from '@products/00_shared/models/compute/instance/instance';
 import { ProductSubnet } from '@products/00_shared/models/product.model';
 import { SubnetService } from '@products/00_shared/services/subnet.service';
-import { CidrForVersion, CidrNetworkAddress } from '@products/00_shared/utils/ip';
+import { CidrForVersion, CidrNetworkAddress, GenerateRandomMac } from '@products/00_shared/utils/ip';
+import { ConfirmDialog } from '@shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { StateService } from '@shared/services/state.service';
-import { ipInCidrValidator, ipValidator } from '@shared/utils/validators';
+import { ipInCidrValidator, ipValidator, macValidator } from '@shared/utils/validators';
 import { of } from 'rxjs';
-
-interface NetworkItem {
-  subnetId: string;
-  subnetName: string;
-}
 
 @Component({
   selector: 'spx-instance-network-create',
@@ -39,9 +38,10 @@ interface NetworkItem {
     MatFormFieldModule,
     MatButtonModule,
     MatSelectModule,
-    MatFormFieldModule,
     MatInputModule,
     MatIconModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
@@ -54,6 +54,8 @@ export class InstanceNetworkCreateComponent {
   protected subnetSvc = inject(SubnetService);
   protected stateSvc = inject(StateService);
   protected fb = inject(FormBuilder);
+  protected dialog = inject(MatDialog);
+  protected cdr = inject(ChangeDetectorRef);
 
   protected readonly NETWORK_MODEL_LIST = NETWORK_MODEL_LIST;
   protected readonly NETWORK_MODEL_AUTO = NETWORK_MODEL_AUTO;
@@ -77,6 +79,7 @@ export class InstanceNetworkCreateComponent {
   protected cidrNetworkAddress = CidrNetworkAddress;
 
   staticIpMap = new Map<string, string>();
+  staticMacMap = new Map<string, string>();
   networkModelMap = new Map<string, string>();
 
   subnetsProduct = rxResource({
@@ -108,6 +111,7 @@ export class InstanceNetworkCreateComponent {
       if (this.az() == null || this.az()) {
         this.networkList = [];
         this.staticIpMap.clear();
+        this.staticMacMap.clear();
         this.updateOutput();
       }
     });
@@ -127,11 +131,24 @@ export class InstanceNetworkCreateComponent {
               this.staticIpMap.set(`${product.id}-v6`, n.ipv6);
             }
 
+            if (n.macAddress) {
+              this.staticMacMap.set(product.id, n.macAddress);
+            }
+
             if (n.model) {
               this.networkModelMap.set(product.id, n.model);
             }
 
-            this.addFormControl(product.id, product.subnet?.spec?.cidrBlock, n.ipv4, n.ipv6, n.model);
+            const enabled = n.enabled ?? true;
+            this.addFormControl(
+              product.id,
+              product.subnet?.spec?.cidrBlock,
+              n.ipv4,
+              n.ipv6,
+              n.model,
+              enabled,
+              n.macAddress
+            );
           }
         });
         this.networkList = networkList;
@@ -150,7 +167,15 @@ export class InstanceNetworkCreateComponent {
     }
   }
 
-  addFormControl(id: string, cidr?: string, ipv4?: string, ipv6?: string, model?: string) {
+  addFormControl(
+    id: string,
+    cidr?: string,
+    ipv4?: string,
+    ipv6?: string,
+    model?: string,
+    enabled = true,
+    macAddress?: string
+  ) {
     const group = new FormGroup({});
 
     const v4Cidr = cidr ? CidrForVersion(cidr, 4) : undefined;
@@ -158,12 +183,14 @@ export class InstanceNetworkCreateComponent {
 
     group.addControl('v4', new FormControl(ipv4 || '', [ipValidator(), ipInCidrValidator(v4Cidr)]));
     group.addControl('v6', new FormControl(ipv6 || '', [ipValidator(), ipInCidrValidator(v6Cidr)]));
+    group.addControl('macAddress', new FormControl(macAddress || '', [macValidator()]));
     group.addControl('model', new FormControl(model || ''));
+    group.addControl('enabled', new FormControl(enabled));
 
-    this.formIps.addControl(id, group);
+    this.formIps.setControl(id, group);
   }
 
-  drop(event: CdkDragDrop<NetworkItem[]>) {
+  drop(event: CdkDragDrop<ProductSubnet[]>) {
     moveItemInArray(this.networkList, event.previousIndex, event.currentIndex);
     this.updateOutput();
   }
@@ -171,6 +198,40 @@ export class InstanceNetworkCreateComponent {
   removeItemByIndex(index: number) {
     transferArrayItem(this.networkList, [], index, 0);
     this.updateOutput();
+  }
+
+  isInterfaceEnabled(id: string): boolean {
+    return (this.formIps.get(id) as FormGroup)?.get('enabled')?.value ?? true;
+  }
+
+  isPrimaryInterfaceDisabled(id: string): boolean {
+    const isPrimary = this.networkList[0]?.id === id;
+    return isPrimary && !this.isInterfaceEnabled(id);
+  }
+
+  onToggleEnabled(index: number, id: string, event: MatSlideToggleChange) {
+    const isPrimary = index === 0 || this.networkList[0]?.id === id;
+    if (isPrimary && !event.checked) {
+      const ref = this.dialog.open(ConfirmDialog, {
+        data: {
+          title: 'Disable primary interface?',
+          content:
+            'Disabling the primary interface will disconnect default gateway connectivity. Remote access may be interrupted. Are you sure you want to proceed?',
+          confirmBtn: 'Disable',
+          cancelBtn: 'Cancel',
+        },
+      });
+
+      ref.afterClosed().subscribe(confirmed => {
+        if (!confirmed) {
+          this.formIps.get([id, 'enabled'])?.setValue(true);
+        }
+        this.updateOutput();
+        this.cdr.markForCheck();
+      });
+    } else {
+      this.updateOutput();
+    }
   }
 
   updateOutput() {
@@ -187,8 +248,10 @@ export class InstanceNetworkCreateComponent {
         return {
           order: i,
           subnetEId: v.eid,
+          enabled: this.isInterfaceEnabled(v.id),
           ipv4: this.staticIpMap.get(`${v.id}-v4`),
           ipv6: this.staticIpMap.get(`${v.id}-v6`),
+          macAddress: this.staticMacMap.get(v.id),
           model: this.networkModelMap.get(v.id),
         };
       })
@@ -200,6 +263,26 @@ export class InstanceNetworkCreateComponent {
   updateStaticIp(id: string, ip: string, type: 'v4' | 'v6') {
     this.staticIpMap.set(`${id}-${type}`, ip);
     this.updateOutput();
+  }
+
+  updateStaticMac(id: string, mac: string) {
+    if (mac) {
+      this.staticMacMap.set(id, mac);
+    } else {
+      this.staticMacMap.delete(id);
+    }
+    this.updateOutput();
+  }
+
+  scrambleMac(id: string) {
+    const newMac = GenerateRandomMac();
+    const group = this.formIps.get(id) as FormGroup | null;
+    const ctrl = group?.get('macAddress');
+    if (ctrl) {
+      ctrl.setValue(newMac);
+      ctrl.markAsDirty();
+    }
+    this.updateStaticMac(id, newMac);
   }
 
   updateNetworkModel(id: string, model: string) {

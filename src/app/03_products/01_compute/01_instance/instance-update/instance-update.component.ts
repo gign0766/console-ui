@@ -27,11 +27,11 @@ import {
   MEMORY_DEFAULT_VALUE,
   MEMORY_VALUE_LIST,
   MemoryValue,
-  NETWORK_MODEL_AUTO,
   UpdateInstance,
   VM_TYPE_DEFAULT,
 } from '@products/00_shared/models/compute/instance/instance';
 import { extractVolumeEID } from '@products/00_shared/models/compute/instance/utils';
+import { extractNetworksFromInstance } from '../instance-actions.utils';
 import {
   AdvancedOptions,
   AdvancedOptionsInput,
@@ -261,34 +261,9 @@ export class InstanceUpdateComponent {
             custom: cloudInit !== DEFAULT_CLOUD_INIT,
           };
 
-          const networkList: CreateInstanceNetwork[] = [];
-          const netInterface = res.vm.spec.template?.spec.domain.devices.interfaces;
-          res.vm.spec.template?.spec.networks.forEach((v, i) => {
-            const subnetEid = v.multus?.networkName.replace(`spx-${this.stateSvc.project()!.id}/`, '');
-            if (subnetEid) {
-              const annotation = `${subnetEid}.spx-${this.stateSvc.project()!.id}.ovn.kubernetes.io/ip_address`;
-              const ip_address = res.vm?.spec.template?.metadata.annotations?.[annotation];
-
-              const network: CreateInstanceNetwork = {
-                order: i,
-                model: NETWORK_MODEL_AUTO,
-                subnetEId: subnetEid,
-              };
-
-              if (ip_address) {
-                const ips = this.parseIp(ip_address);
-                network.ipv4 = ips.v4;
-                network.ipv6 = ips.v6;
-              }
-              if (netInterface && netInterface[i]) {
-                network.model = netInterface[i].model || NETWORK_MODEL_AUTO;
-              }
-
-              networkList.push(network);
-            }
-          });
-
+          const networkList = extractNetworksFromInstance(res, this.stateSvc.project()?.id ?? '');
           this.initNetwork = networkList;
+          this.networks = [...networkList];
 
           const sshKeys = res.vm.spec.template?.spec.accessCredentials?.map(
             v => v.sshPublicKey.source.secret.secretName
@@ -322,7 +297,7 @@ export class InstanceUpdateComponent {
           html: `
           <span>Are you sure you want to update "${this.instance()!.productName}"?</span>
           <br><br>
-          <span><strong>Warning: </strong><i>The update will only take effect after restarting the instance!</i></span>`,
+          <span><strong>Warning: </strong><i>Resource changes (CPU/RAM) will only take effect after restarting the instance. Network interface link state changes apply dynamically at runtime without rebooting.</i></span>`,
         },
       });
       ref.afterClosed().subscribe(async res => {
@@ -381,19 +356,5 @@ export class InstanceUpdateComponent {
 
   openRunStrategyHelp() {
     this.dialog.open(InstanceCreateRunStrategyHelperDialog);
-  }
-
-  private parseIp(ip: string): { v4?: string; v6?: string } {
-    const ips = ip.split(',');
-    // dual
-    if (ips.length === 2) {
-      return { v4: ips[0], v6: ips[1] };
-    } else {
-      if (ip.includes(':')) {
-        return { v6: ip };
-      } else {
-        return { v4: ip };
-      }
-    }
   }
 }

@@ -113,8 +113,10 @@ export interface CreateInstanceNetwork {
   order: number;
   subnetEId: string; //subnet Effective ID
   model?: string;
+  enabled?: boolean;
   ipv4?: string;
   ipv6?: string;
+  macAddress?: string;
 }
 
 export interface CreateInstanceDisk {
