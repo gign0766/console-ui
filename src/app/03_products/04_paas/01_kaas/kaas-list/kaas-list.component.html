@@ -57,6 +57,8 @@
                 <mat-chip class="status-chip--warning" disabled="true">Outdated</mat-chip>
               }
             </mat-chip-set>
+          } @else if (el.data.outdated === false) {
+            <mat-icon matTooltip="Up to date" aria-label="Up to date">check</mat-icon>
           }
         </mat-cell>
       </ng-container>

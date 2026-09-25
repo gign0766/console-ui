@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductListFilterComponent } from '@products/00_shared/components/product-list-filter/product-list-filter.component';
 import { ProductKaaS } from '@products/00_shared/models/product.model';
@@ -40,6 +41,7 @@ interface ProductKaaSItem {
     MatChipsModule,
     MatMenuModule,
     MatDividerModule,
+    MatTooltipModule,
     ContentHeaderComponent,
     ProductListFilterComponent,
     ProductTableWrapperComponent,
