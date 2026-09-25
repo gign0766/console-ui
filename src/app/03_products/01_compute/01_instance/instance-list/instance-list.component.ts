@@ -223,14 +223,12 @@ export class InstanceListComponent {
 
     // If we have a text filter
     if (filterMap.get('search')) {
-      // If vm not present, do not exclude the line
-      let statusFilter = item.data.vm?.status.printableStatus.toLocaleLowerCase().includes(filterMap.get('search'));
-      if (statusFilter === undefined) {
-        statusFilter = true;
-      }
+      const searchTerm = filterMap.get('search');
+      const status = (item.data.vm?.status?.printableStatus || 'unknown').toLowerCase();
+      const statusFilter = status.includes(searchTerm);
       return (
-        item.data.productName.toLowerCase().includes(filterMap.get('search')) ||
-        item.data.eid.toLowerCase().includes(filterMap.get('search')) ||
+        item.data.productName.toLowerCase().includes(searchTerm) ||
+        item.data.eid.toLowerCase().includes(searchTerm) ||
         statusFilter
       );
     } else {
