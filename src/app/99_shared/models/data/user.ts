@@ -1,4 +1,4 @@
-import { Organization } from './organization';
+import { compareByName, Organization } from './organization';
 
 export interface Session {
   session: string;
@@ -24,7 +24,10 @@ export interface UserRole {
   owner?: boolean;
 }
 
+/** Personal organizations then guest ones, each sorted by name. An organization in both lists counts as personal. */
 export function getUserOrganization(user: User): Organization[] {
-  const result = user.guestOrg || [];
-  return [...new Map(result.concat(user.personalOrg).map(item => [item.id, item])).values()];
+  const personal = [...(user.personalOrg ?? [])].sort(compareByName);
+  const personalIds = new Set(personal.map(org => org.id));
+  const guest = (user.guestOrg ?? []).filter(org => !personalIds.has(org.id)).sort(compareByName);
+  return [...personal, ...guest];
 }

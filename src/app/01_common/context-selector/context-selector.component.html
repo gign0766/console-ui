@@ -7,37 +7,64 @@
         </mat-icon>
         Organization
       </div>
-      <mat-select
+      <input
+        #orgInput
+        matInput
         id="orgSelect"
-        #orgSelect
-        [value]="stateSvc.organization()?.id"
-        (selectionChange)="orgChanged(orgSelect.value)">
-        <mat-select-trigger>
-          <div class="context-selector__organization-selection">
-            <span> {{ stateSvc.organization()?.name }} </span>
-          </div>
-        </mat-select-trigger>
+        aria-label="Organization"
+        [value]="stateSvc.organization()?.name ?? ''"
+        [matAutocomplete]="orgAuto"
+        (input)="orgSearch.set(orgInput.value)"
+        (focus)="selectCurrent(orgInput, orgSearch())"
+        (click)="selectCurrent(orgInput, orgSearch())" />
+      <mat-icon matSuffix>arrow_drop_down</mat-icon>
+      <mat-autocomplete
+        #orgAuto="matAutocomplete"
+        [displayWith]="displayName"
+        [autoActiveFirstOption]="!!orgSearch()"
+        (optionSelected)="orgChanged($event.option.value.id, orgInput)"
+        (opened)="scrollToSelected(orgAuto)"
+        (closed)="restore(orgInput, orgSearch, stateSvc.organization()?.name)">
         @for (org of orgList(); track org.id) {
-          <mat-option [value]="org.id">
+          <mat-option [value]="org" [spxOptionSelected]="org.id === stateSvc.organization()?.id">
             <mat-icon>{{ org.ownerId === auth.user()?.id ? 'person' : 'public' }}</mat-icon>
             {{ org.name }}
           </mat-option>
+        } @empty {
+          <mat-option disabled>No organization found</mat-option>
         }
-      </mat-select>
+      </mat-autocomplete>
     </mat-form-field>
   </div>
   <div class="context-selector__project">
     <mat-form-field subscriptSizing="dynamic" appearance="outline">
       <span matPrefix class="context-selector__project-prefix">Project</span>
-      <mat-select
+      <input
+        #projectInput
+        matInput
         id="projectSelect"
-        #projectSelect
-        [value]="stateSvc.project()?.id"
-        (selectionChange)="projectChanged(projectSelect.value)">
-        @for (p of stateSvc.organization()?.projects; track p.id) {
-          <mat-option [value]="p.id">{{ p.name }}</mat-option>
+        aria-label="Project"
+        [value]="stateSvc.project()?.name ?? ''"
+        [matAutocomplete]="projectAuto"
+        (input)="projectSearch.set(projectInput.value)"
+        (focus)="selectCurrent(projectInput, projectSearch())"
+        (click)="selectCurrent(projectInput, projectSearch())" />
+      <mat-icon matSuffix>arrow_drop_down</mat-icon>
+      <mat-autocomplete
+        #projectAuto="matAutocomplete"
+        [displayWith]="displayName"
+        [autoActiveFirstOption]="!!projectSearch()"
+        (optionSelected)="projectChanged($event.option.value.id)"
+        (opened)="scrollToSelected(projectAuto)"
+        (closed)="restore(projectInput, projectSearch, stateSvc.project()?.name)">
+        @for (p of projectList(); track p.id) {
+          <mat-option [value]="p" [spxOptionSelected]="p.id === stateSvc.project()?.id">
+            {{ p.name }}
+          </mat-option>
+        } @empty {
+          <mat-option disabled>No project found</mat-option>
         }
-      </mat-select>
+      </mat-autocomplete>
     </mat-form-field>
   </div>
 </div>
