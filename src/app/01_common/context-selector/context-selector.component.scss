@@ -41,17 +41,4 @@
       font: var(--mat-sys-label-large);
     }
   }
-
-  &__organization-selection {
-    position: relative;
-    display: flex;
-    align-items: center;
-    // add 16px to keep same spacing than select list
-    // margin-left: calc(24px + 16px);
-
-    .material-symbols-rounded {
-      position: absolute;
-      left: calc(-24px - 16px);
-    }
-  }
 }

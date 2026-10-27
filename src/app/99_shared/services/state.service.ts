@@ -1,6 +1,6 @@
 import { DestroyRef, inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { OrganizationService } from './organization.service';
-import { Organization, Project } from '../models/data/organization';
+import { compareByName, Organization, Project } from '../models/data/organization';
 import { debounceTime, firstValueFrom, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { getUserOrganization, User } from '@shared/models/data/user';
@@ -61,16 +61,22 @@ export class StateService {
     }
   }
 
-  async setOrganization(orgId: string, forceRefresh = false) {
+  /** Switches to the organization. Resolves to false, keeping the current one, when it cannot be loaded. */
+  async setOrganization(orgId: string, forceRefresh = false): Promise<boolean> {
     if (orgId === '') {
-      return;
+      return false;
     }
 
     if (!forceRefresh && this.organization()?.id === orgId) {
-      return;
+      return true;
     }
 
-    const org = await firstValueFrom(this.orgSvc.getOrg(orgId));
+    // The errors interceptor already tells the user why it failed.
+    const fetched = await firstValueFrom(this.orgSvc.getOrg(orgId)).catch(() => undefined);
+    if (!fetched) {
+      return false;
+    }
+    const org = { ...fetched, projects: [...(fetched.projects ?? [])].sort(compareByName) };
     this.organization.set(org);
 
     //  Load AZ list for the selected organization
@@ -90,6 +96,7 @@ export class StateService {
     }
 
     this.stateChanged.next();
+    return true;
   }
 
   setProject(projectId: string) {

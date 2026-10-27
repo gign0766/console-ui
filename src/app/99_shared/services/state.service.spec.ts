@@ -5,7 +5,7 @@ import { OrganizationService } from './organization.service';
 import { PermissionService } from './permission.service';
 import { AZService } from '@products/00_shared/services/az.service';
 import { AZ } from '@products/00_shared/models/product.model';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { Organization } from '../models/data/organization';
 
 describe('StateService', () => {
@@ -91,6 +91,75 @@ describe('StateService', () => {
       azSvcSpy.listAZs.calls.reset();
       await service.setOrganization(orgId);
       expect(azSvcSpy.listAZs).not.toHaveBeenCalled();
+    });
+
+    it('should resolve to true when the organization is loaded', async () => {
+      orgSvcSpy.getOrg.and.returnValue(of(mockOrg));
+
+      expect(await service.setOrganization(orgId)).toBeTrue();
+    });
+
+    it('should resolve to false and keep the current organization when loading fails', async () => {
+      orgSvcSpy.getOrg.and.returnValue(of(mockOrg));
+      await service.setOrganization(orgId);
+
+      orgSvcSpy.getOrg.and.returnValue(throwError(() => new Error('403')));
+      expect(await service.setOrganization('org-forbidden')).toBeFalse();
+      expect(service.organization()?.id).toBe(orgId);
+    });
+
+    describe('projects', () => {
+      const orgWithProjects = {
+        id: orgId,
+        projects: [
+          { id: 'p10', name: 'project10' },
+          { id: 'pz', name: 'Zeta' },
+          { id: 'p2', name: 'project2' },
+          { id: 'pd', name: 'default' },
+        ],
+      } as unknown as Organization;
+
+      beforeEach(() => {
+        localStorage.removeItem('project');
+        orgSvcSpy.getOrg.and.returnValue(of(orgWithProjects));
+      });
+
+      afterEach(() => localStorage.removeItem('project'));
+
+      it('should sort projects by name', async () => {
+        await service.setOrganization(orgId);
+
+        expect(service.organization()!.projects.map(p => p.name)).toEqual(['default', 'project2', 'project10', 'Zeta']);
+      });
+
+      it('should not reorder the fetched organization', async () => {
+        await service.setOrganization(orgId);
+
+        expect(orgWithProjects.projects[0].id).toBe('p10');
+      });
+
+      it('should select the first project by name when none is cached', async () => {
+        await service.setOrganization(orgId);
+
+        expect(service.project()?.id).toBe('pd');
+      });
+
+      it('should keep the cached project', async () => {
+        localStorage.setItem('project', 'pz');
+
+        await service.setOrganization(orgId);
+
+        expect(service.project()?.id).toBe('pz');
+      });
+
+      it('should handle an organization without projects', async () => {
+        orgSvcSpy.getOrg.and.returnValue(of({ id: orgId, projects: null } as unknown as Organization));
+
+        await service.setOrganization(orgId);
+
+        expect(service.organization()!.projects).toEqual([]);
+        expect(service.project()).toBeUndefined();
+      });
     });
   });
 });
